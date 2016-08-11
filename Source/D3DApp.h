@@ -21,8 +21,6 @@ public:
 	D3DApp(HINSTANCE Instance);
 	virtual ~D3DApp();
 
-//	HINSTANCE AppInst()const;
-//	HWND      MainWnd()const;
 	float AspectRatio() const;
 
 	int Run();
@@ -31,8 +29,9 @@ public:
 	// implement specific application requirements.
 
 	virtual bool Init();
-	virtual void OnResize();
 	virtual LRESULT MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+	virtual void OnResize();
 
 	virtual void UpdateScene(float dt) = 0;
 	virtual void DrawScene() = 0;
@@ -52,6 +51,8 @@ protected:
 	HINSTANCE mAppInstance;
 	HWND mMainWindow;
 
+	D3D_DRIVER_TYPE mD3DDriverType;
+
 	ID3D11Device* mDevice;
 	ID3D11DeviceContext* mImmediateContext;
 
@@ -64,23 +65,20 @@ protected:
 
 	D3D11_VIEWPORT mViewport;
 
-	UINT mMultisampleQuality;
-
 	GameTimer mTimer;
 
-	bool      mAppPaused;
-	bool      mMinimized;
-	bool      mMaximized;
+	bool mAppPaused;
+	bool mMinimized;
+	bool mMaximized;
 
 	// Derived class should set these in derived constructor to customize starting values.
 	std::wstring mWindowTitle;
-
-	D3D_DRIVER_TYPE mD3DDriverType;
 
 	int mClientWidth;
 	int mClientHeight;
 
 	bool mEnableMultisample;
+	UINT mMultisampleQuality;
 };
 
 #endif // D3DAPP_H

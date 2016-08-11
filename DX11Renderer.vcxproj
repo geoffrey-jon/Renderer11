@@ -71,29 +71,29 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\Renderer11\ThirdParty;D:\Renderer11\Source;D:\Renderer11\Source\Utility;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\Renderer11\Lib\Effects\Win32\Debug;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)ThirdParty;$(SolutionDir)Source;$(SolutionDir)Source\Utility;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)Lib\Effects\Win32\Debug;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)Bin\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)Intermediate\$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\Renderer11\ThirdParty;D:\Renderer11\Source;D:\Renderer11\Source\Utility;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-    <LibraryPath>D:\Renderer11\Lib\Effects\x64\Debug;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)ThirdParty;$(SolutionDir)Source;$(SolutionDir)Source\Utility;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)Lib\Effects\x64\Debug;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)Bin\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)Intermediate\$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>D:\Renderer11\ThirdParty;D:\Renderer11\Source;D:\Renderer11\Source\Utility;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\Renderer11\Lib\Effects\Win32\Release;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)ThirdParty;$(SolutionDir)Source;$(SolutionDir)Source\Utility;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)Lib\Effects\Win32\Release;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)Bin\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)Intermediate\$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>D:\Renderer11\ThirdParty;D:\Renderer11\Source;D:\Renderer11\Source\Utility;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-    <LibraryPath>D:\Renderer11\Lib\Effects\x64\Release;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)ThirdParty;$(SolutionDir)Source;$(SolutionDir)Source\Utility;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>$(SolutionDir)Lib\Effects\x64\Release;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)Bin\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)Intermediate\$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
