@@ -13,6 +13,14 @@ struct Vertex
 	DirectX::XMFLOAT4 Color;
 };
 
+struct InstancedVertex
+{
+	DirectX::XMFLOAT4 TexCoord0;
+	DirectX::XMFLOAT4 TexCoord1;
+	DirectX::XMFLOAT4 TexCoord2;
+	DirectX::XMFLOAT4 TexCoord3;
+};
+
 struct ConstBuffer
 {
 	DirectX::XMMATRIX worldViewProj;
@@ -37,28 +45,36 @@ public:
 private:
 	void BuildGeometryBuffers();
 	void BuildShaders();
+	void BuildRasterizerState();
+	void InitUserInput();
+	void PositionObjects();
 
 private:
-	ID3D11Buffer* mVB;
-	ID3D11Buffer* mIB;
-
-	ID3D11VertexShader* mVertexShader;
-	ID3D11PixelShader* mPixelShader;
+	// Data Buffers
+	ID3D11Buffer* mVertexBuffer;
+	ID3D11Buffer* mInstanceBuffer;
+	ID3D11Buffer* mIndexBuffer;
 	ID3D11Buffer* mConstBuffer;
 
+	// Shaders
 	ID3D11InputLayout* mInputLayout;
+	ID3D11InputLayout* mInstancedInputLayout;
 
+	ID3D11VertexShader* mVertexShader;
+	ID3D11VertexShader* mInstancedVertexShader;
+
+	ID3D11PixelShader* mPixelShader;
+
+	// State Objects
 	ID3D11RasterizerState* mWireframeRS;
-
-	// Define transformations from local spaces to world space.
-	DirectX::XMFLOAT4X4 mSphereWorld[10];
-	DirectX::XMFLOAT4X4 mCylWorld[10];
-	DirectX::XMFLOAT4X4 mBoxWorld;
-	DirectX::XMFLOAT4X4 mGridWorld;
-	DirectX::XMFLOAT4X4 mCenterSphere;
 
 	DirectX::XMFLOAT4X4 mView;
 	DirectX::XMFLOAT4X4 mProj;
+
+	// Define transformations from local spaces to world space.
+	DirectX::XMFLOAT4X4 mBoxWorld;
+	DirectX::XMFLOAT4X4 mGridWorld;
+	DirectX::XMFLOAT4X4 mCenterSphere;
 
 	int mBoxVertexOffset;
 	int mGridVertexOffset;
@@ -75,12 +91,13 @@ private:
 	UINT mSphereIndexCount;
 	UINT mCylinderIndexCount;
 
+	// Camera
 	float mTheta;
 	float mPhi;
 	float mRadius;
 
+	// User Input
 	POINT mLastMousePos;
 };
-
 
 #endif // MYAPP_H

@@ -82,11 +82,14 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="FX\PixelShader.ps">
+    <FxCompile Include="Shaders\PixelShader.hlsl">
       <Filter>Shaders</Filter>
-    </None>
-    <None Include="FX\VertexShader.vs">
+    </FxCompile>
+    <FxCompile Include="Shaders\VertexShader.hlsl">
       <Filter>Shaders</Filter>
-    </None>
+    </FxCompile>
+    <FxCompile Include="Shaders\InstancedVertexShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

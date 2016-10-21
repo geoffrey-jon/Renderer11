@@ -9,8 +9,8 @@
 
 MyApp::MyApp(HINSTANCE Instance) :
 	D3DApp(Instance), 
-	mVB(0), 
-	mIB(0), 
+	mVertexBuffer(0), 
+	mIndexBuffer(0), 
 	mInputLayout(0), 
 	mWireframeRS(0),
 	mTheta(1.5f*MathHelper::Pi), 
@@ -20,68 +20,57 @@ MyApp::MyApp(HINSTANCE Instance) :
 	mPixelShader(0),
 	mConstBuffer(0)
 {
-	mWindowTitle = L"D3D Initialization";
-
-	mLastMousePos.x = 0;
-	mLastMousePos.y = 0;
-
-	DirectX::XMMATRIX I = DirectX::XMMatrixIdentity();
-	XMStoreFloat4x4(&mGridWorld, I);
-	XMStoreFloat4x4(&mView, I);
-	XMStoreFloat4x4(&mProj, I);
-
-	DirectX::XMMATRIX boxScale = DirectX::XMMatrixScaling(2.0f, 1.0f, 2.0f);
-	DirectX::XMMATRIX boxOffset = DirectX::XMMatrixTranslation(0.0f, 0.5f, 0.0f);
-	XMStoreFloat4x4(&mBoxWorld, XMMatrixMultiply(boxScale, boxOffset));
-
-	DirectX::XMMATRIX centerSphereScale = DirectX::XMMatrixScaling(2.0f, 2.0f, 2.0f);
-	DirectX::XMMATRIX centerSphereOffset = DirectX::XMMatrixTranslation(0.0f, 2.0f, 0.0f);
-	XMStoreFloat4x4(&mCenterSphere, XMMatrixMultiply(centerSphereScale, centerSphereOffset));
-
-	for (int i = 0; i < 5; ++i)
-	{
-		XMStoreFloat4x4(&mCylWorld[i * 2 + 0], DirectX::XMMatrixTranslation(-5.0f, 1.5f, -10.0f + i*5.0f));
-		XMStoreFloat4x4(&mCylWorld[i * 2 + 1], DirectX::XMMatrixTranslation(+5.0f, 1.5f, -10.0f + i*5.0f));
-
-		XMStoreFloat4x4(&mSphereWorld[i * 2 + 0], DirectX::XMMatrixTranslation(-5.0f, 3.5f, -10.0f + i*5.0f));
-		XMStoreFloat4x4(&mSphereWorld[i * 2 + 1], DirectX::XMMatrixTranslation(+5.0f, 3.5f, -10.0f + i*5.0f));
-	}
+	mWindowTitle = L"Shapes Demo";
 }
 
 MyApp::~MyApp()
 {
-	ReleaseCOM(mVB);
-	ReleaseCOM(mIB);
+	ReleaseCOM(mVertexBuffer);
+	ReleaseCOM(mIndexBuffer);
 	ReleaseCOM(mInputLayout);
 	ReleaseCOM(mWireframeRS);
+	ReleaseCOM(mConstBuffer);
+	ReleaseCOM(mVertexShader);
+	ReleaseCOM(mPixelShader);
 }
 
 bool MyApp::Init()
 {
-	if (!D3DApp::Init())
-	{
-		return false;
-	}
+	// Initialize View and Projection Matrices
+	DirectX::XMMATRIX I = DirectX::XMMatrixIdentity();
+	XMStoreFloat4x4(&mView, I);
+	XMStoreFloat4x4(&mProj, I);
 
+	// Initialize parent D3DApp
+	if (!D3DApp::Init()) { return false; }
+
+	// Initialize User Input
+	InitUserInput();
+
+	// Create the geometry for the demo and set their world positions
 	BuildGeometryBuffers();
+	PositionObjects();
+
+	// Compile Shaders
 	BuildShaders();
 
-	D3D11_RASTERIZER_DESC wireframeDesc;
-	ZeroMemory(&wireframeDesc, sizeof(D3D11_RASTERIZER_DESC));
-	wireframeDesc.FillMode = D3D11_FILL_WIREFRAME;
-	wireframeDesc.CullMode = D3D11_CULL_BACK;
-	wireframeDesc.FrontCounterClockwise = false;
-	wireframeDesc.DepthClipEnable = true;
-
-	HR(mDevice->CreateRasterizerState(&wireframeDesc, &mWireframeRS));
+	// Construct and Bind the Rasterizer State
+	BuildRasterizerState();
 
 	return true;
+}
+
+void MyApp::InitUserInput()
+{
+	mLastMousePos.x = 0;
+	mLastMousePos.y = 0;
 }
 
 void MyApp::OnResize()
 {
 	D3DApp::OnResize();
 
+	// Update the Projection matrix based on the window size
 	DirectX::XMMATRIX P = DirectX::XMMatrixPerspectiveFovLH(0.25f*MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
 	XMStoreFloat4x4(&mProj, P);
 }
@@ -98,37 +87,40 @@ void MyApp::UpdateScene(float dt)
 	DirectX::XMVECTOR target = DirectX::XMVectorZero();
 	DirectX::XMVECTOR up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
+	// Update the view matrix
 	DirectX::XMMATRIX V = DirectX::XMMatrixLookAtLH(pos, target, up);
 	XMStoreFloat4x4(&mView, V);
 }
 
 void MyApp::DrawScene()
 {
+	// Clear the render target and depth/stencil views
 	mImmediateContext->ClearRenderTargetView(mRenderTargetView, reinterpret_cast<const float*>(&Colors::LightSteelBlue));
 	mImmediateContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-	mImmediateContext->IASetInputLayout(mInputLayout);
-	mImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
 	mImmediateContext->RSSetState(mWireframeRS);
 
-	UINT stride = sizeof(Vertex);
-	UINT offset = 0;
-	mImmediateContext->IASetVertexBuffers(0, 1, &mVB, &stride, &offset);
-	mImmediateContext->IASetIndexBuffer(mIB, DXGI_FORMAT_R32_UINT, 0);
+	mImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	mImmediateContext->IASetIndexBuffer(mIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	mImmediateContext->PSSetShader(mPixelShader, NULL, 0);
 
-	// Set constants
-
+	// Multiply the view and projection matrics
 	DirectX::XMMATRIX view = XMLoadFloat4x4(&mView);
 	DirectX::XMMATRIX proj = XMLoadFloat4x4(&mProj);
 	DirectX::XMMATRIX viewProj = view*proj;
 
-	mImmediateContext->VSSetShader(mVertexShader, NULL, 0);
-	mImmediateContext->PSSetShader(mPixelShader, NULL, 0);
-
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	ConstBuffer* dataPtr;
 
+	// Draw non-instanced geometry
+	mImmediateContext->IASetInputLayout(mInputLayout);
+
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+	mImmediateContext->IASetVertexBuffers(0, 1, &mVertexBuffer, &stride, &offset);
+	mImmediateContext->VSSetShader(mVertexShader, NULL, 0);
+
+	// Draw the grid
 	DirectX::XMMATRIX world = XMLoadFloat4x4(&mGridWorld);
 
 	mImmediateContext->Map(mConstBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
@@ -160,34 +152,29 @@ void MyApp::DrawScene()
 
 	mImmediateContext->VSSetConstantBuffers(0, 1, &mConstBuffer);
 	mImmediateContext->DrawIndexed(mSphereIndexCount, mSphereIndexOffset, mSphereVertexOffset);
+	
+	// Draw the instanced geometry
+	mImmediateContext->IASetInputLayout(mInstancedInputLayout);
+
+	UINT strides[2] = { sizeof(Vertex), sizeof(InstancedVertex) };
+	UINT offsets[2] = { 0, 0 };
+	ID3D11Buffer* vBuffers[2] = {mVertexBuffer, mInstanceBuffer};
+	mImmediateContext->IASetVertexBuffers(0, 2, vBuffers, strides, offsets);
+
+	mImmediateContext->VSSetShader(mInstancedVertexShader, NULL, 0);
+
+	mImmediateContext->Map(mConstBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	dataPtr = (ConstBuffer*)mappedResource.pData;
+	dataPtr->worldViewProj = DirectX::XMMatrixTranspose(viewProj);
+	mImmediateContext->Unmap(mConstBuffer, 0);
+
+	mImmediateContext->VSSetConstantBuffers(0, 1, &mConstBuffer);
 
 	// Draw the cylinders.
-	for (int i = 0; i < 10; ++i)
-	{
-		world = XMLoadFloat4x4(&mCylWorld[i]);
-
-		mImmediateContext->Map(mConstBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-		dataPtr = (ConstBuffer*)mappedResource.pData;
-		dataPtr->worldViewProj = DirectX::XMMatrixTranspose(world*viewProj);
-		mImmediateContext->Unmap(mConstBuffer, 0);
-
-		mImmediateContext->VSSetConstantBuffers(0, 1, &mConstBuffer);
-		mImmediateContext->DrawIndexed(mCylinderIndexCount, mCylinderIndexOffset, mCylinderVertexOffset);
-	}
+	mImmediateContext->DrawIndexedInstanced(mCylinderIndexCount, 10, mCylinderIndexOffset, mCylinderVertexOffset, 0);
 
 	// Draw the spheres.
-	for (int i = 0; i < 10; ++i)
-	{
-		world = XMLoadFloat4x4(&mSphereWorld[i]);
-
-		mImmediateContext->Map(mConstBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-		dataPtr = (ConstBuffer*)mappedResource.pData;
-		dataPtr->worldViewProj = DirectX::XMMatrixTranspose(world*viewProj);
-		mImmediateContext->Unmap(mConstBuffer, 0);
-
-		mImmediateContext->VSSetConstantBuffers(0, 1, &mConstBuffer);
-		mImmediateContext->DrawIndexed(mSphereIndexCount, mSphereIndexOffset, mSphereVertexOffset);
-	}
+	mImmediateContext->DrawIndexedInstanced(mSphereIndexCount, 10, mSphereIndexOffset, mSphereVertexOffset, 10);
 
 	HR(mSwapChain->Present(0, 0));
 }
@@ -248,7 +235,6 @@ void MyApp::BuildGeometryBuffers()
 	geoGen.CreateBox(1.0f, 1.0f, 1.0f, box);
 	geoGen.CreateGrid(20.0f, 30.0f, 60, 40, grid);
 	geoGen.CreateSphere(0.5f, 20, 20, sphere);
-	//geoGen.CreateGeosphere(0.5f, 2, sphere);
 	geoGen.CreateCylinder(0.5f, 0.3f, 3.0f, 20, 20, cylinder);
 
 	// Cache the vertex offsets to each object in the concatenated vertex buffer.
@@ -287,6 +273,7 @@ void MyApp::BuildGeometryBuffers()
 	//
 
 	std::vector<Vertex> vertices(totalVertexCount);
+	std::vector<InstancedVertex> instancedVertices(20);
 
 	DirectX::XMFLOAT4 black(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -323,7 +310,49 @@ void MyApp::BuildGeometryBuffers()
 	vbd.MiscFlags = 0;
 	D3D11_SUBRESOURCE_DATA vinitData;
 	vinitData.pSysMem = &vertices[0];
-	HR(mDevice->CreateBuffer(&vbd, &vinitData, &mVB));
+	HR(mDevice->CreateBuffer(&vbd, &vinitData, &mVertexBuffer));
+
+	for (size_t i = 0; i < 5; ++i)
+	{
+		DirectX::XMMATRIX m1 = DirectX::XMMatrixTranslation(-5.0f, 1.5f, -10.0f + i*5.0f);
+		DirectX::XMMATRIX m2 = DirectX::XMMatrixTranslation(+5.0f, 1.5f, -10.0f + i*5.0f);
+
+		DirectX::XMStoreFloat4(&instancedVertices[i * 2 + 0].TexCoord0, m1.r[0]);
+		DirectX::XMStoreFloat4(&instancedVertices[i * 2 + 0].TexCoord1, m1.r[1]);
+		DirectX::XMStoreFloat4(&instancedVertices[i * 2 + 0].TexCoord2, m1.r[2]);
+		DirectX::XMStoreFloat4(&instancedVertices[i * 2 + 0].TexCoord3, m1.r[3]);
+
+		DirectX::XMStoreFloat4(&instancedVertices[i * 2 + 1].TexCoord0, m2.r[0]);
+		DirectX::XMStoreFloat4(&instancedVertices[i * 2 + 1].TexCoord1, m2.r[1]);
+		DirectX::XMStoreFloat4(&instancedVertices[i * 2 + 1].TexCoord2, m2.r[2]);
+		DirectX::XMStoreFloat4(&instancedVertices[i * 2 + 1].TexCoord3, m2.r[3]);
+	}
+
+	for (size_t i = 0; i < 5; ++i)
+	{
+		DirectX::XMMATRIX m1 = DirectX::XMMatrixTranslation(-5.0f, 3.5f, -10.0f + i*5.0f);
+		DirectX::XMMATRIX m2 = DirectX::XMMatrixTranslation(+5.0f, 3.5f, -10.0f + i*5.0f);
+
+		DirectX::XMStoreFloat4(&instancedVertices[(i + 5) * 2 + 0].TexCoord0, m1.r[0]);
+		DirectX::XMStoreFloat4(&instancedVertices[(i + 5) * 2 + 0].TexCoord1, m1.r[1]);
+		DirectX::XMStoreFloat4(&instancedVertices[(i + 5) * 2 + 0].TexCoord2, m1.r[2]);
+		DirectX::XMStoreFloat4(&instancedVertices[(i + 5) * 2 + 0].TexCoord3, m1.r[3]);
+
+		DirectX::XMStoreFloat4(&instancedVertices[(i + 5) * 2 + 1].TexCoord0, m2.r[0]);
+		DirectX::XMStoreFloat4(&instancedVertices[(i + 5) * 2 + 1].TexCoord1, m2.r[1]);
+		DirectX::XMStoreFloat4(&instancedVertices[(i + 5) * 2 + 1].TexCoord2, m2.r[2]);
+		DirectX::XMStoreFloat4(&instancedVertices[(i + 5) * 2 + 1].TexCoord3, m2.r[3]);
+	}
+
+	D3D11_BUFFER_DESC ivbd;
+	ivbd.Usage = D3D11_USAGE_IMMUTABLE;
+	ivbd.ByteWidth = sizeof(InstancedVertex) * 20;
+	ivbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	ivbd.CPUAccessFlags = 0;
+	ivbd.MiscFlags = 0;
+	D3D11_SUBRESOURCE_DATA ivinitData;
+	ivinitData.pSysMem = &instancedVertices[0];
+	HR(mDevice->CreateBuffer(&ivbd, &ivinitData, &mInstanceBuffer));
 
 	//
 	// Pack the indices of all the meshes into one index buffer.
@@ -343,18 +372,37 @@ void MyApp::BuildGeometryBuffers()
 	ibd.MiscFlags = 0;
 	D3D11_SUBRESOURCE_DATA iinitData;
 	iinitData.pSysMem = &indices[0];
-	HR(mDevice->CreateBuffer(&ibd, &iinitData, &mIB));
+	HR(mDevice->CreateBuffer(&ibd, &iinitData, &mIndexBuffer));
+}
+
+void MyApp::PositionObjects()
+{
+	DirectX::XMMATRIX I = DirectX::XMMatrixIdentity();
+	XMStoreFloat4x4(&mGridWorld, I);
+
+	DirectX::XMMATRIX boxScale = DirectX::XMMatrixScaling(2.0f, 1.0f, 2.0f);
+	DirectX::XMMATRIX boxOffset = DirectX::XMMatrixTranslation(0.0f, 0.5f, 0.0f);
+	XMStoreFloat4x4(&mBoxWorld, XMMatrixMultiply(boxScale, boxOffset));
+
+	DirectX::XMMATRIX centerSphereScale = DirectX::XMMatrixScaling(2.0f, 2.0f, 2.0f);
+	DirectX::XMMATRIX centerSphereOffset = DirectX::XMMatrixTranslation(0.0f, 2.0f, 0.0f);
+	XMStoreFloat4x4(&mCenterSphere, XMMatrixMultiply(centerSphereScale, centerSphereOffset));
 }
 
 void MyApp::BuildShaders()
 {
 	ID3DBlob* VSByteCode = 0;
-	HR(D3DCompileFromFile(L"Shaders/VertexShader.vs", 0, 0, "VS", "vs_5_0", D3DCOMPILE_DEBUG, 0, &VSByteCode, 0));
+	HR(D3DCompileFromFile(L"Shaders/VertexShader.hlsl", 0, 0, "VS", "vs_5_0", D3DCOMPILE_DEBUG, 0, &VSByteCode, 0));
 
 	HR(mDevice->CreateVertexShader(VSByteCode->GetBufferPointer(), VSByteCode->GetBufferSize(), NULL, &mVertexShader));
 
+	ID3DBlob* InstVSByteCode = 0;
+	HR(D3DCompileFromFile(L"Shaders/InstancedVertexShader.hlsl", 0, 0, "VS", "vs_5_0", D3DCOMPILE_DEBUG, 0, &InstVSByteCode, 0));
+
+	HR(mDevice->CreateVertexShader(InstVSByteCode->GetBufferPointer(), InstVSByteCode->GetBufferSize(), NULL, &mInstancedVertexShader));
+
 	ID3DBlob* PSByteCode = 0;
-	HR(D3DCompileFromFile(L"Shaders/PixelShader.ps", 0, 0, "PS", "ps_5_0", D3DCOMPILE_DEBUG, 0, &PSByteCode, 0));
+	HR(D3DCompileFromFile(L"Shaders/PixelShader.hlsl", 0, 0, "PS", "ps_5_0", D3DCOMPILE_DEBUG, 0, &PSByteCode, 0));
 
 	HR(mDevice->CreatePixelShader(PSByteCode->GetBufferPointer(), PSByteCode->GetBufferSize(), NULL, &mPixelShader));
 
@@ -368,7 +416,21 @@ void MyApp::BuildShaders()
 	// Create the input layout
 	HR(mDevice->CreateInputLayout(vertexDesc, 2, VSByteCode->GetBufferPointer(), VSByteCode->GetBufferSize(), &mInputLayout));
 
+	D3D11_INPUT_ELEMENT_DESC instancedVertexDesc[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+		{ "TEXCOORD", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 16, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+		{ "TEXCOORD", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 32, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+		{ "TEXCOORD", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 48, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
+	};
+
+	// Create the input layout
+	HR(mDevice->CreateInputLayout(instancedVertexDesc, 6, InstVSByteCode->GetBufferPointer(), InstVSByteCode->GetBufferSize(), &mInstancedInputLayout));
+
 	VSByteCode->Release();
+	InstVSByteCode->Release();
 	PSByteCode->Release();
 
 	D3D11_BUFFER_DESC matrixBufferDesc;
@@ -381,4 +443,16 @@ void MyApp::BuildShaders()
 	matrixBufferDesc.StructureByteStride = 0;
 
 	HR(mDevice->CreateBuffer(&matrixBufferDesc, NULL, &mConstBuffer));
+}
+
+void MyApp::BuildRasterizerState()
+{
+	D3D11_RASTERIZER_DESC wireframeDesc;
+	ZeroMemory(&wireframeDesc, sizeof(D3D11_RASTERIZER_DESC));
+	wireframeDesc.FillMode = D3D11_FILL_WIREFRAME;
+	wireframeDesc.CullMode = D3D11_CULL_BACK;
+	wireframeDesc.FrontCounterClockwise = false;
+	wireframeDesc.DepthClipEnable = true;
+
+	HR(mDevice->CreateRasterizerState(&wireframeDesc, &mWireframeRS));
 }
