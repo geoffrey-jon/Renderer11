@@ -19,6 +19,9 @@
     <Filter Include="Utility">
       <UniqueIdentifier>{d8d84a9c-2b2a-4ebf-91e3-ce355db952b0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{b2d3bfbe-4f65-49da-8853-edd9c1ac43b2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\MyApp.cpp">
@@ -77,5 +80,13 @@
     <ClInclude Include="ThirdParty\DXErr.h">
       <Filter>ThirdParty</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="FX\PixelShader.ps">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="FX\VertexShader.vs">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
