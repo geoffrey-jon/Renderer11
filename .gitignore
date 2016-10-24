@@ -1,5 +1,5 @@
-Bin/
-Intermediate/
+ShapesDemo/Bin/
+ShapesDemo/Intermediate/
 
 *.sdf
 *.opendb

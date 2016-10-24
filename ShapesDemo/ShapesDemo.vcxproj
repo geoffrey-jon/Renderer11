@@ -23,6 +23,7 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>DX11Renderer</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <ProjectName>ShapesDemo</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -71,31 +72,31 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)ThirdParty;$(SolutionDir)Source;$(SolutionDir)Source\Utility;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)Lib\Effects\Win32\Debug;$(LibraryPath)</LibraryPath>
-    <OutDir>$(SolutionDir)Bin\$(Configuration)\$(Platform)\</OutDir>
-    <IntDir>$(SolutionDir)Intermediate\$(Configuration)\$(Platform)\</IntDir>
+    <IncludePath>$(SolutionDir)Common\ThirdParty;$(ProjectDir)Source;$(SolutionDir)Common\Utility;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)Common\Lib\Effects\Win32\Debug;$(LibraryPath)</LibraryPath>
+    <OutDir>$(ProjectDir)Bin\$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(ProjectDir)Intermediate\$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)ThirdParty;$(SolutionDir)Source;$(SolutionDir)Source\Utility;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)Lib\Effects\x64\Debug;$(LibraryPath)</LibraryPath>
-    <OutDir>$(SolutionDir)Bin\$(Configuration)\$(Platform)\</OutDir>
-    <IntDir>$(SolutionDir)Intermediate\$(Configuration)\$(Platform)\</IntDir>
+    <IncludePath>$(SolutionDir)Common\ThirdParty;$(ProjectDir)Source;$(SolutionDir)Common/Utility;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)Common\Lib\Effects\x64\Debug;$(LibraryPath)</LibraryPath>
+    <OutDir>$(ProjectDir)Bin\$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(ProjectDir)Intermediate\$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)ThirdParty;$(SolutionDir)Source;$(SolutionDir)Source\Utility;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)Lib\Effects\Win32\Release;$(LibraryPath)</LibraryPath>
-    <OutDir>$(SolutionDir)Bin\$(Configuration)\$(Platform)\</OutDir>
-    <IntDir>$(SolutionDir)Intermediate\$(Configuration)\$(Platform)\</IntDir>
+    <IncludePath>$(SolutionDir)Common\ThirdParty;$(ProjectDir)Source;$(SolutionDir)Common/Utility;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)Common\Lib\Effects\Win32\Release;$(LibraryPath)</LibraryPath>
+    <OutDir>$(ProjectDir)Bin\$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(ProjectDir)Intermediate\$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)ThirdParty;$(SolutionDir)Source;$(SolutionDir)Source\Utility;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-    <LibraryPath>$(SolutionDir)Lib\Effects\x64\Release;$(LibraryPath)</LibraryPath>
-    <OutDir>$(SolutionDir)Bin\$(Configuration)\$(Platform)\</OutDir>
-    <IntDir>$(SolutionDir)Intermediate\$(Configuration)\$(Platform)\</IntDir>
+    <IncludePath>$(SolutionDir)Common\ThirdParty;$(ProjectDir)Source;$(SolutionDir)Common/Utility;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)Common\Lib\Effects\x64\Release;$(LibraryPath)</LibraryPath>
+    <OutDir>$(ProjectDir)Bin\$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(ProjectDir)Intermediate\$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -175,26 +176,26 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Source\D3DApp.cpp" />
+    <ClCompile Include="..\Common\ThirdParty\DDSTextureLoader.cpp" />
+    <ClCompile Include="..\Common\ThirdParty\DXErr.cpp" />
+    <ClCompile Include="..\Common\Utility\D3DApp.cpp" />
+    <ClCompile Include="..\Common\Utility\GameTimer.cpp" />
+    <ClCompile Include="..\Common\Utility\GeometryGenerator.cpp" />
+    <ClCompile Include="..\Common\Utility\MathHelper.cpp" />
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Source\MyApp.cpp" />
-    <ClCompile Include="Source\Utility\GameTimer.cpp" />
-    <ClCompile Include="Source\Utility\GeometryGenerator.cpp" />
-    <ClCompile Include="Source\Utility\MathHelper.cpp" />
-    <ClCompile Include="ThirdParty\DDSTextureLoader.cpp" />
-    <ClCompile Include="ThirdParty\DXErr.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Source\D3DApp.h" />
+    <ClInclude Include="..\Common\ThirdParty\D3DX11Effect.h" />
+    <ClInclude Include="..\Common\ThirdParty\DDSTextureLoader.h" />
+    <ClInclude Include="..\Common\ThirdParty\DXErr.h" />
+    <ClInclude Include="..\Common\Utility\D3DApp.h" />
+    <ClInclude Include="..\Common\Utility\D3DUtil.h" />
+    <ClInclude Include="..\Common\Utility\GameTimer.h" />
+    <ClInclude Include="..\Common\Utility\GeometryGenerator.h" />
+    <ClInclude Include="..\Common\Utility\LightHelper.h" />
+    <ClInclude Include="..\Common\Utility\MathHelper.h" />
     <ClInclude Include="Source\MyApp.h" />
-    <ClInclude Include="Source\Utility\D3DUtil.h" />
-    <ClInclude Include="Source\Utility\GameTimer.h" />
-    <ClInclude Include="Source\Utility\GeometryGenerator.h" />
-    <ClInclude Include="Source\Utility\LightHelper.h" />
-    <ClInclude Include="Source\Utility\MathHelper.h" />
-    <ClInclude Include="ThirdParty\D3DX11Effect.h" />
-    <ClInclude Include="ThirdParty\DDSTextureLoader.h" />
-    <ClInclude Include="ThirdParty\DXErr.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\InstancedVertexShader.hlsl">
