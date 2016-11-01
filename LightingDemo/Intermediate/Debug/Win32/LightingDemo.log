@@ -1,0 +1,5 @@
+﻿  MyApp.cpp
+d:\renderer\renderer11\lightingdemo\source\myapp.cpp(56): warning C4316: 'GObject': object allocated on the heap may not be aligned 16
+  Main.cpp
+  Generating Code...
+  LightingDemo.vcxproj -> D:\Renderer\Renderer11\LightingDemo\Bin\Debug\Win32\LightingDemo.exe
