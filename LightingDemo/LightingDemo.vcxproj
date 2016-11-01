@@ -181,8 +181,8 @@
     <ClCompile Include="..\Common\Utility\D3DApp.cpp" />
     <ClCompile Include="..\Common\Utility\GameTimer.cpp" />
     <ClCompile Include="..\Common\Utility\GeometryGenerator.cpp" />
+    <ClCompile Include="..\Common\Utility\GObject.cpp" />
     <ClCompile Include="..\Common\Utility\MathHelper.cpp" />
-    <ClCompile Include="Source\GObject.cpp" />
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Source\MyApp.cpp" />
   </ItemGroup>
@@ -195,9 +195,9 @@
     <ClInclude Include="..\Common\Utility\D3DUtil.h" />
     <ClInclude Include="..\Common\Utility\GameTimer.h" />
     <ClInclude Include="..\Common\Utility\GeometryGenerator.h" />
+    <ClInclude Include="..\Common\Utility\GObject.h" />
     <ClInclude Include="..\Common\Utility\LightHelper.h" />
     <ClInclude Include="..\Common\Utility\MathHelper.h" />
-    <ClInclude Include="Source\GObject.h" />
     <ClInclude Include="Source\MyApp.h" />
     <ClInclude Include="Source\Vertex.h" />
   </ItemGroup>

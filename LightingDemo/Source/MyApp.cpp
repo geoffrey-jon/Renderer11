@@ -1,6 +1,7 @@
+
 /*  =======================
-	Summary: DX11 Chapter 4
-	=======================  */
+Summary: DX11 Chapter 4
+=======================  */
 
 #include "MyApp.h"
 #include "GeometryGenerator.h"
@@ -8,7 +9,7 @@
 #include "D3DCompiler.h"
 
 MyApp::MyApp(HINSTANCE Instance) :
-	D3DApp(Instance), 
+	D3DApp(Instance),
 	mShapesVertexBuffer(0),
 	mShapesIndexBuffer(0),
 	mConstBufferPerFrame(0),

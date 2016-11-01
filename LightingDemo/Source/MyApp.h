@@ -1,6 +1,7 @@
+
 /*  =======================
-	Summary: DX11 Chapter 4 
-	=======================  */
+Summary: DX11 Chapter 4
+=======================  */
 
 #ifndef MYAPP_H
 #define MYAPP_H
