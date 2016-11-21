@@ -66,14 +66,18 @@ bool MyApp::Init()
 
 	// Construct and Bind the Rasterizer State
 	BuildRasterizerState();
-
+	BuildSamplerState();
+	LoadTextureToSRV(L"Textures/WoodCrate02.dds", &mDiffuseMapSRV);
 	SetupStaticLights();
 
-	ID3D11Resource* texResource = nullptr;
-	HR(DirectX::CreateDDSTextureFromFile(mDevice, L"Textures/WoodCrate01.dds", &texResource, &mDiffuseMapSRV));
-	ReleaseCOM(texResource); // view saves reference
-
 	return true;
+}
+
+void MyApp::LoadTextureToSRV(LPCWSTR filename, ID3D11ShaderResourceView** SRV)
+{
+	ID3D11Resource* texResource = nullptr;
+	HR(DirectX::CreateDDSTextureFromFile(mDevice, filename, &texResource, SRV));
+	ReleaseCOM(texResource); // view saves reference
 }
 
 void MyApp::InitUserInput()
@@ -287,6 +291,26 @@ void MyApp::BuildRasterizerState()
 	HR(mDevice->CreateRasterizerState(&wireframeDesc, &mWireframeRS));
 }
 
+void MyApp::BuildSamplerState()
+{
+	D3D11_SAMPLER_DESC SamplerDesc;
+	SamplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	SamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	SamplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	SamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	SamplerDesc.MipLODBias = 0.0f;
+	SamplerDesc.MaxAnisotropy = 1;
+	SamplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	SamplerDesc.BorderColor[0] = 1.0f;
+	SamplerDesc.BorderColor[1] = 1.0f;
+	SamplerDesc.BorderColor[2] = 1.0f;
+	SamplerDesc.BorderColor[3] = 1.0f;
+	SamplerDesc.MinLOD = -FLT_MAX;
+	SamplerDesc.MaxLOD = FLT_MAX;
+
+	mDevice->CreateSamplerState(&SamplerDesc, &mSamplerState);
+}
+
 void MyApp::SetupStaticLights()
 {
 	mDirLights[0].Ambient = DirectX::XMFLOAT4(0.3f, 0.3f, 0.3f, 1.0f);
@@ -334,25 +358,15 @@ void MyApp::DrawScene()
 	mImmediateContext->ClearRenderTargetView(mRenderTargetView, reinterpret_cast<const float*>(&Colors::LightSteelBlue));
 	mImmediateContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-	mImmediateContext->RSSetState(mWireframeRS);
-
-	mImmediateContext->IASetInputLayout(mInputLayout);
-	mImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
 	// Multiply the view and projection matrics
 	DirectX::XMMATRIX view = XMLoadFloat4x4(&mView);
 	DirectX::XMMATRIX proj = XMLoadFloat4x4(&mProj);
 	DirectX::XMMATRIX viewProj = view*proj;
 
-	UINT stride = sizeof(Vertex);
-	UINT offset = 0;
-
+	// Set per frame constants
 	D3D11_MAPPED_SUBRESOURCE cbPerFrameResource;
-	D3D11_MAPPED_SUBRESOURCE cbPerObjectResource;
 	ConstBufferPerFrame* cbPerFrame;
-	ConstBufferPerObject* cbPerObject;
 
-	// Set per frame constants.
 	mImmediateContext->Map(mConstBufferPerFrame, 0, D3D11_MAP_WRITE_DISCARD, 0, &cbPerFrameResource);
 	cbPerFrame = (ConstBufferPerFrame*)cbPerFrameResource.pData;
 	cbPerFrame->dirLight0 = mDirLights[0];
@@ -360,34 +374,50 @@ void MyApp::DrawScene()
 	cbPerFrame->eyePosW = mEyePosW;
 	mImmediateContext->Unmap(mConstBufferPerFrame, 0);
 
-	mImmediateContext->VSSetConstantBuffers(0, 1, &mConstBufferPerFrame);
-	mImmediateContext->PSSetConstantBuffers(0, 1, &mConstBufferPerFrame);
+	// Draw Textured Box
+	{
+		DirectX::XMMATRIX world = XMLoadFloat4x4(&mBoxWorld);
+		DirectX::XMMATRIX worldInvTranspose = MathHelper::InverseTranspose(world);
+		DirectX::XMMATRIX worldViewProj = world*viewProj;
+		UINT stride = sizeof(Vertex);
+		UINT offset = 0;
 
-	mImmediateContext->VSSetShader(mVertexShader, NULL, 0);
-	mImmediateContext->PSSetShader(mPixelShader, NULL, 0);
+		// Set per object constants
+		D3D11_MAPPED_SUBRESOURCE cbPerObjectResource;
+		ConstBufferPerObject* cbPerObject;
 
-	// Draw the box
-	mImmediateContext->IASetVertexBuffers(0, 1, &mBoxVertexBuffer, &stride, &offset);
-	mImmediateContext->IASetIndexBuffer(mBoxIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+		mImmediateContext->Map(mConstBufferPerObject, 0, D3D11_MAP_WRITE_DISCARD, 0, &cbPerObjectResource);
+		cbPerObject = (ConstBufferPerObject*)cbPerObjectResource.pData;
+		cbPerObject->world = DirectX::XMMatrixTranspose(world);
+		cbPerObject->worldInvTranpose = DirectX::XMMatrixTranspose(worldInvTranspose);
+		cbPerObject->worldViewProj = DirectX::XMMatrixTranspose(worldViewProj);
+		cbPerObject->texTransform = DirectX::XMMatrixTranspose(XMLoadFloat4x4(&mTexTransform));
+		cbPerObject->material = mBoxMat;
+		mImmediateContext->Unmap(mConstBufferPerObject, 0);
 
-	DirectX::XMMATRIX world = XMLoadFloat4x4(&mBoxWorld);
-	DirectX::XMMATRIX worldInvTranspose = MathHelper::InverseTranspose(world);
-	DirectX::XMMATRIX worldViewProj = world*viewProj;
+		// Set Input Assembler Stage
+		mImmediateContext->IASetInputLayout(mInputLayout);
+		mImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		mImmediateContext->IASetVertexBuffers(0, 1, &mBoxVertexBuffer, &stride, &offset);
+		mImmediateContext->IASetIndexBuffer(mBoxIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
-	mImmediateContext->Map(mConstBufferPerObject, 0, D3D11_MAP_WRITE_DISCARD, 0, &cbPerObjectResource);
-	cbPerObject = (ConstBufferPerObject*)cbPerObjectResource.pData;
-	cbPerObject->world = DirectX::XMMatrixTranspose(world);
-	cbPerObject->worldInvTranpose = DirectX::XMMatrixTranspose(worldInvTranspose);
-	cbPerObject->worldViewProj = DirectX::XMMatrixTranspose(worldViewProj);
-	cbPerObject->texTransform = DirectX::XMMatrixTranspose(XMLoadFloat4x4(&mTexTransform));
-	cbPerObject->material = mBoxMat;
-	mImmediateContext->Unmap(mConstBufferPerObject, 0);
+		// Set Vertex Shader Stage
+		mImmediateContext->VSSetConstantBuffers(0, 1, &mConstBufferPerFrame);
+		mImmediateContext->VSSetConstantBuffers(1, 1, &mConstBufferPerObject);
+		mImmediateContext->VSSetShader(mVertexShader, NULL, 0);
 
-	mImmediateContext->PSSetShaderResources(0, 1, &mDiffuseMapSRV);
+		// Set Rasterizer Stage
+		mImmediateContext->RSSetState(mWireframeRS);
 
-	mImmediateContext->VSSetConstantBuffers(1, 1, &mConstBufferPerObject);
-	mImmediateContext->PSSetConstantBuffers(1, 1, &mConstBufferPerObject);
-	mImmediateContext->DrawIndexed(mBoxIndexCount, mBoxIndexOffset, mBoxVertexOffset);
+		// Set Pixel Shader Stage	
+		mImmediateContext->PSSetConstantBuffers(0, 1, &mConstBufferPerFrame);
+		mImmediateContext->PSSetConstantBuffers(1, 1, &mConstBufferPerObject);
+		mImmediateContext->PSSetShaderResources(0, 1, &mDiffuseMapSRV);
+		mImmediateContext->PSSetSamplers(0, 1, &mSamplerState);
+		mImmediateContext->PSSetShader(mPixelShader, NULL, 0);
+
+		mImmediateContext->DrawIndexed(mBoxIndexCount, mBoxIndexOffset, mBoxVertexOffset);
+	} // End Draw Box
 
 	HR(mSwapChain->Present(0, 0));
 }

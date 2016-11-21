@@ -45,6 +45,7 @@ public:
 private:
 	void BuildShapeGeometryBuffers();
 	void BuildGeometryBuffers(GObject* obj);
+	void LoadTextureToSRV(LPCWSTR filename, ID3D11ShaderResourceView** srv);
 
 	void BuildVertexShader(ID3D11VertexShader** shader, LPCWSTR filename, LPCSTR entryPoint);
 	void BuildPixelShader(ID3D11PixelShader** shader, LPCWSTR filename, LPCSTR entryPoint);
@@ -52,6 +53,8 @@ private:
 	void CreateConstantBuffer(ID3D11Buffer** buffer, UINT size);
 
 	void BuildRasterizerState();
+	void BuildSamplerState();
+
 	void InitUserInput();
 	void PositionObjects();
 	void SetupStaticLights();
@@ -77,6 +80,7 @@ private:
 
 	// State Objects
 	ID3D11RasterizerState* mWireframeRS;
+	ID3D11SamplerState* mSamplerState;
 
 	DirectX::XMFLOAT4X4 mView;
 	DirectX::XMFLOAT4X4 mProj;
