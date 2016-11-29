@@ -179,7 +179,7 @@ void MyApp::BuildShapeGeometryBuffers()
 
 	std::vector<Vertex> vertices(totalVertexCount);
 
-	UINT k = 0;
+	size_t k = 0;
 	for (size_t i = 0; i < box.Vertices.size(); ++i, ++k)
 	{
 		vertices[k].Pos = box.Vertices[i].Position;

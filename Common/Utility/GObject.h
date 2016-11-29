@@ -11,11 +11,16 @@
 #include <string>
 #include <vector>
 
+__declspec(align(16))
 class GObject
 {
 public:
 	GObject(std::string filename);
 	~GObject();
+
+
+	void* operator new(size_t i) { return _mm_malloc(i,16);	}
+	void operator delete(void* p) { _mm_free(p); }
 
 	bool Init();
 

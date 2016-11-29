@@ -85,8 +85,8 @@ private:
 	DirectX::XMFLOAT4X4 mBoxWorld;
 	DirectX::XMFLOAT4X4 mGridWorld;
 
-	int mBoxVertexOffset;
-	int mGridVertexOffset;
+	UINT mBoxVertexOffset;
+	UINT mGridVertexOffset;
 
 	UINT mBoxIndexOffset;
 	UINT mGridIndexOffset;

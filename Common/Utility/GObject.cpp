@@ -20,16 +20,6 @@ GObject::~GObject()
 	ReleaseCOM(mIndexBuffer);
 }
 
-void* operator new(size_t i)
-{
-	return _mm_malloc(i,16);
-}
-
-void operator delete(void* p)
-{
-	_mm_free(p);
-}
-
 bool GObject::Init()
 {
 	return true;
@@ -66,6 +56,7 @@ bool GObject::ReadObjFile()
 	mIndexCount = mIndexCount * 3;
 
 	fin.close();
+	return true;
 }
 
 void GObject::SetMaterial(Material mat)
