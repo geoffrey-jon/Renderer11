@@ -15,6 +15,7 @@ __declspec(align(16))
 class GObject
 {
 public:
+	GObject();
 	GObject(std::string filename);
 	~GObject();
 
@@ -31,6 +32,8 @@ public:
 	void SetSpecular(DirectX::XMFLOAT4 specular);
 	void SetReflect(DirectX::XMFLOAT4 reflect);
 
+	void SetTexture(LPCWSTR filename);
+
 	void Translate(float x, float y, float z);
 	void Rotate(float x, float y, float z);
 	void Scale(float x, float y, float z);
@@ -43,16 +46,19 @@ public:
 
 	inline ID3D11Buffer** GetIndexBuffer() { return &mIndexBuffer; }
 	inline ID3D11Buffer** GetVertexBuffer() { return &mVertexBuffer; }
+	inline ID3D11ShaderResourceView** GetDiffuseMapSRV() { return &mDiffuseMapSRV; }
 
-	void SetWorldTransform(DirectX::XMFLOAT4X4 transform);
 	DirectX::XMFLOAT4X4 GetWorldTransform();
+	DirectX::XMFLOAT4X4 GetTexTransform();
 
 private:
 	bool ReadObjFile();
 
-private:
+protected:
 	ID3D11Buffer* mVertexBuffer;
 	ID3D11Buffer* mIndexBuffer;
+
+	ID3D11ShaderResourceView* mDiffuseMapSRV;
 
 	std::vector<Vertex> mVertices;
 	std::vector<UINT> mIndices;
@@ -62,6 +68,7 @@ private:
 	Material mMaterial;
 
 	DirectX::XMFLOAT4X4 mWorldTransform;
+	DirectX::XMFLOAT4X4 mTexTransform;
 
 	DirectX::XMMATRIX mTranslation;
 	DirectX::XMMATRIX mRotation;

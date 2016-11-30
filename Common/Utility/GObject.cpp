@@ -5,19 +5,26 @@
 #include "GObject.h"
 #include "D3DUtil.h"
 
-GObject::GObject(std::string filename) : mVertexBuffer(0), mIndexBuffer(0)
-{ 
-	mFilename = filename;
+GObject::GObject() : mVertexBuffer(0), mIndexBuffer(0), mDiffuseMapSRV(0)
+{
 	mTranslation = DirectX::XMMatrixIdentity();
 	mRotation = DirectX::XMMatrixIdentity();
 	mScale = DirectX::XMMatrixIdentity();
+	DirectX::XMStoreFloat4x4(&mTexTransform, DirectX::XMMatrixIdentity());
+}
+
+GObject::GObject(std::string filename)
+{ 
+	mFilename = filename;
 	ReadObjFile();
+	GObject();
 }
 
 GObject::~GObject()
 {
 	ReleaseCOM(mVertexBuffer);
 	ReleaseCOM(mIndexBuffer);
+	ReleaseCOM(mDiffuseMapSRV);
 }
 
 bool GObject::Init()
@@ -110,4 +117,9 @@ DirectX::XMFLOAT4X4 GObject::GetWorldTransform()
 	DirectX::XMMATRIX SR = XMMatrixMultiply(mScale, mRotation);
 	XMStoreFloat4x4(&mWorldTransform, XMMatrixMultiply(SR, mTranslation));
 	return mWorldTransform;
+}
+
+DirectX::XMFLOAT4X4 GObject::GetTexTransform()
+{
+	return mTexTransform;
 }
