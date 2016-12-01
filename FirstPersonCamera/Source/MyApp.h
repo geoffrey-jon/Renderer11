@@ -1,6 +1,6 @@
 /*  =======================
-Summary: 
-=======================  */
+	Summary: 
+	=======================  */
 
 #ifndef MYAPP_H
 #define MYAPP_H
@@ -47,15 +47,17 @@ public:
 	void OnMouseMove(WPARAM btnState, int x, int y);
 
 private:
-	void BuildGeometryBuffers(GObject* obj);
+	void CreateRasterizerState();
+	void CreateSamplerState();
 
-	void LoadTextureToSRV(ID3D11ShaderResourceView** srv, LPCWSTR filename);
-	void BuildVertexShader(ID3D11VertexShader** shader, LPCWSTR filename, LPCSTR entryPoint);
-	void BuildPixelShader(ID3D11PixelShader** shader, LPCWSTR filename, LPCSTR entryPoint);
+	void CreateGeometryBuffers(GObject* obj);
 
 	void CreateConstantBuffer(ID3D11Buffer** buffer, UINT size);
-	void BuildSamplerState();
-	void BuildRasterizerState();
+	void CreateVertexShader(ID3D11VertexShader** shader, LPCWSTR filename, LPCSTR entryPoint);
+	void CreatePixelShader(ID3D11PixelShader** shader, LPCWSTR filename, LPCSTR entryPoint);
+
+	void LoadTextureToSRV(ID3D11ShaderResourceView** srv, LPCWSTR filename);
+
 	void InitUserInput();
 	void PositionObjects();
 	void SetupStaticLights();
@@ -66,7 +68,7 @@ private:
 	ID3D11Buffer* mConstBufferPerObject;
 
 	// State Objects
-	ID3D11RasterizerState* mWireframeRS;
+	ID3D11RasterizerState* mRasterizerState;
 	ID3D11SamplerState* mSamplerState;
 
 	// Shaders

@@ -10,4 +10,4 @@ struct Vertex
 	DirectX::XMFLOAT2 Tex;
 };
 
-#endif // !VERTEX_H
+#endif // VERTEX_H

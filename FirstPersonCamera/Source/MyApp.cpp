@@ -15,7 +15,8 @@ MyApp::MyApp(HINSTANCE Instance) :
 	mPixelShader(0),
 	mLightCount(1),
 	mVertexLayout(0),
-	mWireframeRS(0)
+	mRasterizerState(0),
+	mSamplerState(0)
 {
 	mWindowTitle = L"First Person Camera Demo";
 }
@@ -27,7 +28,8 @@ MyApp::~MyApp()
 	ReleaseCOM(mVertexShader);
 	ReleaseCOM(mPixelShader);
 	ReleaseCOM(mVertexLayout);
-	ReleaseCOM(mWireframeRS);
+	ReleaseCOM(mRasterizerState);
+	ReleaseCOM(mSamplerState);
 }
 
 bool MyApp::Init()
@@ -43,26 +45,26 @@ bool MyApp::Init()
 
 	// Create the geometry for the demo and set their world positions
 	mSkullObject = new GObject("Models/skull.txt");
-	BuildGeometryBuffers(mSkullObject);
+	CreateGeometryBuffers(mSkullObject);
 
 	mBoxObject = new GCube();
-	BuildGeometryBuffers(mBoxObject);
+	CreateGeometryBuffers(mBoxObject);
 
 	mPlaneObject = new GPlane();
-	BuildGeometryBuffers(mPlaneObject);
+	CreateGeometryBuffers(mPlaneObject);
 
 	PositionObjects();
 
 	// Compile Shaders
-	BuildVertexShader(&mVertexShader, L"Shaders/VertexShader.hlsl", "VS");
-	BuildPixelShader(&mPixelShader, L"Shaders/PixelShader.hlsl", "PS");
+	CreateVertexShader(&mVertexShader, L"Shaders/VertexShader.hlsl", "VS");
+	CreatePixelShader(&mPixelShader, L"Shaders/PixelShader.hlsl", "PS");
 
 	CreateConstantBuffer(&mConstBufferPerFrame, sizeof(ConstBufferPerFrame));
 	CreateConstantBuffer(&mConstBufferPerObject, sizeof(ConstBufferPerObject));
 
 	// Construct and Bind the Rasterizer State
-	BuildRasterizerState();
-	BuildSamplerState();
+	CreateRasterizerState();
+	CreateSamplerState();
 
 	SetupStaticLights();
 
@@ -104,7 +106,7 @@ void MyApp::OnMouseMove(WPARAM btnState, int x, int y)
 	mLastMousePos.y = y;
 }
 
-void MyApp::BuildGeometryBuffers(GObject* obj)
+void MyApp::CreateGeometryBuffers(GObject* obj)
 {
 	D3D11_BUFFER_DESC vbd;
 	vbd.Usage = D3D11_USAGE_IMMUTABLE;
@@ -158,7 +160,7 @@ void MyApp::PositionObjects()
 	mSkullObject->SetSpecular(DirectX::XMFLOAT4(0.8f, 0.8f, 0.8f, 16.0f));
 }
 
-void MyApp::BuildVertexShader(ID3D11VertexShader** shader, LPCWSTR filename, LPCSTR entryPoint)
+void MyApp::CreateVertexShader(ID3D11VertexShader** shader, LPCWSTR filename, LPCSTR entryPoint)
 {
 	ID3DBlob* VSByteCode = 0;
 	HR(D3DCompileFromFile(filename, 0, D3D_COMPILE_STANDARD_FILE_INCLUDE, entryPoint, "vs_5_0", D3DCOMPILE_DEBUG, 0, &VSByteCode, 0));
@@ -181,7 +183,7 @@ void MyApp::BuildVertexShader(ID3D11VertexShader** shader, LPCWSTR filename, LPC
 	VSByteCode->Release();
 }
 
-void MyApp::BuildPixelShader(ID3D11PixelShader** shader, LPCWSTR filename, LPCSTR entryPoint)
+void MyApp::CreatePixelShader(ID3D11PixelShader** shader, LPCWSTR filename, LPCSTR entryPoint)
 {
 	ID3DBlob* PSByteCode = 0;
 	HR(D3DCompileFromFile(filename, 0, D3D_COMPILE_STANDARD_FILE_INCLUDE, entryPoint, "ps_5_0", D3DCOMPILE_DEBUG, 0, &PSByteCode, 0));
@@ -212,19 +214,19 @@ void MyApp::CreateConstantBuffer(ID3D11Buffer** buffer, UINT size)
 	HR(mDevice->CreateBuffer(&desc, NULL, buffer));
 }
 
-void MyApp::BuildRasterizerState()
+void MyApp::CreateRasterizerState()
 {
-	D3D11_RASTERIZER_DESC wireframeDesc;
-	ZeroMemory(&wireframeDesc, sizeof(D3D11_RASTERIZER_DESC));
-	wireframeDesc.FillMode = D3D11_FILL_SOLID;
-	wireframeDesc.CullMode = D3D11_CULL_BACK;
-	wireframeDesc.FrontCounterClockwise = false;
-	wireframeDesc.DepthClipEnable = true;
+	D3D11_RASTERIZER_DESC rasterizerDesc;
+	ZeroMemory(&rasterizerDesc, sizeof(D3D11_RASTERIZER_DESC));
+	rasterizerDesc.FillMode = D3D11_FILL_SOLID;
+	rasterizerDesc.CullMode = D3D11_CULL_BACK;
+	rasterizerDesc.FrontCounterClockwise = false;
+	rasterizerDesc.DepthClipEnable = true;
 
-	HR(mDevice->CreateRasterizerState(&wireframeDesc, &mWireframeRS));
+	HR(mDevice->CreateRasterizerState(&rasterizerDesc, &mRasterizerState));
 }
 
-void MyApp::BuildSamplerState()
+void MyApp::CreateSamplerState()
 {
 	D3D11_SAMPLER_DESC SamplerDesc;
 	SamplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
@@ -347,7 +349,7 @@ void MyApp::DrawScene()
 		mImmediateContext->VSSetShader(mVertexShader, NULL, 0);
 
 		// Set Rasterizer Stage
-		mImmediateContext->RSSetState(mWireframeRS);
+		mImmediateContext->RSSetState(mRasterizerState);
 
 		// Set Pixel Shader Stage	
 		mImmediateContext->PSSetConstantBuffers(0, 1, &mConstBufferPerFrame);

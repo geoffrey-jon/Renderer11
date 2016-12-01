@@ -4,6 +4,8 @@ CrateDemo/Bin/
 CrateDemo/Intermediate/
 LightingDemo/Bin/
 LightingDemo/Intermediate/
+FirstPersonCamera/Bin/
+FirstPersonCamera/Intermediate/
 
 *.sdf
 *.opendb
