@@ -6,6 +6,8 @@ LightingDemo/Bin/
 LightingDemo/Intermediate/
 FirstPersonCamera/Bin/
 FirstPersonCamera/Intermediate/
+Blending/Bin/
+Blending/Intermediate/
 
 *.sdf
 *.opendb
