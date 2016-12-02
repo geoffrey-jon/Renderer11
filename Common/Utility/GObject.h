@@ -19,7 +19,6 @@ public:
 	GObject(std::string filename);
 	~GObject();
 
-
 	void* operator new(size_t i) { return _mm_malloc(i,16);	}
 	void operator delete(void* p) { _mm_free(p); }
 
@@ -33,6 +32,7 @@ public:
 	void SetReflect(DirectX::XMFLOAT4 reflect);
 
 	void SetTexture(LPCWSTR filename);
+	void SetTextureScaling(float x, float y);
 
 	void Translate(float x, float y, float z);
 	void Rotate(float x, float y, float z);

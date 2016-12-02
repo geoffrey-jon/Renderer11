@@ -1,6 +1,6 @@
-/*  =============================================
-	Summary: First Person Perspective Camera Demo
-	=============================================  */
+/*  ======================
+	Summary: Blending Demo
+	======================  */
 
 #include "MyApp.h"
 #include "GeometryGenerator.h"
@@ -17,18 +17,7 @@ MyApp::MyApp(HINSTANCE Instance) :
 	mVertexLayout(0),
 	mNoCullRS(0),
 	mWireframeRS(0),
-	mSamplerState(0),
-	mLandVB(0),
-	mLandIB(0),
-	mWavesVB(0),
-	mWavesIB(0),
-	mBoxVB(0),
-	mBoxIB(0),
-	mGrassMapSRV(0), 
-	mWavesMapSRV(0), 
-	mBoxMapSRV(0),
-	mWaterTexOffset(0.0f, 0.0f),
-	mLandIndexCount(0)
+	mSamplerState(0)
 {
 	mWindowTitle = L"Blending Demo";
 }
@@ -36,25 +25,18 @@ MyApp::MyApp(HINSTANCE Instance) :
 MyApp::~MyApp()
 {
 	mImmediateContext->ClearState();
-	ReleaseCOM(mLandVB);
-	ReleaseCOM(mLandIB);
-	ReleaseCOM(mWavesVB);
-	ReleaseCOM(mWavesIB);
-	ReleaseCOM(mBoxVB);
-	ReleaseCOM(mBoxIB);
-	ReleaseCOM(mGrassMapSRV);
-	ReleaseCOM(mWavesMapSRV);
-	ReleaseCOM(mBoxMapSRV);
-	ReleaseCOM(mBlendState);
 
 	ReleaseCOM(mConstBufferPerFrame);
 	ReleaseCOM(mConstBufferPerObject);
+
 	ReleaseCOM(mVertexShader);
 	ReleaseCOM(mPixelShader);
 	ReleaseCOM(mVertexLayout);
+
 	ReleaseCOM(mNoCullRS);
 	ReleaseCOM(mWireframeRS);
 	ReleaseCOM(mSamplerState);
+	ReleaseCOM(mBlendState);
 }
 
 bool MyApp::Init()
@@ -70,16 +52,15 @@ bool MyApp::Init()
 	// Initialize User Input
 	InitUserInput();
 
-	// Initialize Waves
-	mWaves.Init(160, 160, 1.0f, 0.03f, 5.0f, 0.3f);
+	// Create Objects
+	mBoxObject = new GCube();
+	CreateGeometryBuffers(mBoxObject);
 
-	LoadTextureToSRV(&mGrassMapSRV, L"Textures/grass.dds");
-	LoadTextureToSRV(&mWavesMapSRV, L"Textures/water2.dds");
-	LoadTextureToSRV(&mBoxMapSRV, L"Textures/wirefence.dds");
+	mHillObject = new GHill();
+	CreateGeometryBuffers(mHillObject);
 
-	BuildLandGeometryBuffers();
-	BuildWaveGeometryBuffers();
-	BuildCrateGeometryBuffers();
+	mWaveObject = new GWave();
+	CreateGeometryBuffers(mWaveObject, true);
 
 	PositionObjects();
 
@@ -135,13 +116,21 @@ void MyApp::OnMouseMove(WPARAM btnState, int x, int y)
 	mLastMousePos.y = y;
 }
 
-void MyApp::CreateGeometryBuffers(GObject* obj)
+void MyApp::CreateGeometryBuffers(GObject* obj, bool dynamic)
 {
 	D3D11_BUFFER_DESC vbd;
-	vbd.Usage = D3D11_USAGE_IMMUTABLE;
+	if (dynamic) 
+	{
+		vbd.Usage = D3D11_USAGE_DYNAMIC;
+		vbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	}
+	else 
+	{
+		vbd.Usage = D3D11_USAGE_IMMUTABLE;
+		vbd.CPUAccessFlags = 0;
+	}
 	vbd.ByteWidth = sizeof(Vertex) * obj->GetVertexCount();
 	vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vbd.CPUAccessFlags = 0;
 	vbd.MiscFlags = 0;
 	D3D11_SUBRESOURCE_DATA vinitData;
 	vinitData.pSysMem = obj->GetVertices();
@@ -162,197 +151,28 @@ void MyApp::CreateGeometryBuffers(GObject* obj)
 	HR(mDevice->CreateBuffer(&ibd, &iinitData, obj->GetIndexBuffer()));
 }
 
-float MyApp::GetHillHeight(float x, float z)const
-{
-	return 0.3f*(z*sinf(0.1f*x) + x*cosf(0.1f*z));
-}
-
-DirectX::XMFLOAT3 MyApp::GetHillNormal(float x, float z)const
-{
-	// n = (-df/dx, 1, -df/dz)
-	DirectX::XMFLOAT3 n(
-		-0.03f*z*cosf(0.1f*x) - 0.3f*cosf(0.1f*z),
-		1.0f,
-		-0.3f*sinf(0.1f*x) + 0.03f*x*sinf(0.1f*z));
-
-	DirectX::XMVECTOR unitNormal = DirectX::XMVector3Normalize(XMLoadFloat3(&n));
-	XMStoreFloat3(&n, unitNormal);
-
-	return n;
-}
-
-void MyApp::BuildLandGeometryBuffers()
-{
-	GeometryGenerator::MeshData grid;
-
-	GeometryGenerator geoGen;
-
-	geoGen.CreateGrid(160.0f, 160.0f, 50, 50, grid);
-
-	mLandIndexCount = grid.Indices.size();
-
-	//
-	// Extract the vertex elements we are interested and apply the height function to
-	// each vertex.  
-	//
-
-	std::vector<Vertex> vertices(grid.Vertices.size());
-	for (UINT i = 0; i < grid.Vertices.size(); ++i)
-	{
-		DirectX::XMFLOAT3 p = grid.Vertices[i].Position;
-
-		p.y = GetHillHeight(p.x, p.z);
-
-		vertices[i].Pos = p;
-		vertices[i].Normal = GetHillNormal(p.x, p.z);
-		vertices[i].Tex = grid.Vertices[i].TexC;
-	}
-
-	D3D11_BUFFER_DESC vbd;
-	vbd.Usage = D3D11_USAGE_IMMUTABLE;
-	vbd.ByteWidth = sizeof(Vertex) * grid.Vertices.size();
-	vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vbd.CPUAccessFlags = 0;
-	vbd.MiscFlags = 0;
-	D3D11_SUBRESOURCE_DATA vinitData;
-	vinitData.pSysMem = &vertices[0];
-	HR(mDevice->CreateBuffer(&vbd, &vinitData, &mLandVB));
-
-	//
-	// Pack the indices of all the meshes into one index buffer.
-	//
-
-	D3D11_BUFFER_DESC ibd;
-	ibd.Usage = D3D11_USAGE_IMMUTABLE;
-	ibd.ByteWidth = sizeof(UINT) * mLandIndexCount;
-	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	ibd.CPUAccessFlags = 0;
-	ibd.MiscFlags = 0;
-	D3D11_SUBRESOURCE_DATA iinitData;
-	iinitData.pSysMem = &grid.Indices[0];
-	HR(mDevice->CreateBuffer(&ibd, &iinitData, &mLandIB));
-}
-
-void MyApp::BuildWaveGeometryBuffers()
-{
-	// Create the vertex buffer.  Note that we allocate space only, as
-	// we will be updating the data every time step of the simulation.
-
-	D3D11_BUFFER_DESC vbd;
-	vbd.Usage = D3D11_USAGE_DYNAMIC;
-	vbd.ByteWidth = sizeof(Vertex) * mWaves.VertexCount();
-	vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	vbd.MiscFlags = 0;
-	HR(mDevice->CreateBuffer(&vbd, 0, &mWavesVB));
-
-
-	// Create the index buffer.  The index buffer is fixed, so we only 
-	// need to create and set once.
-
-	std::vector<UINT> indices(3 * mWaves.TriangleCount()); // 3 indices per face
-
-														   // Iterate over each quad.
-	UINT m = mWaves.RowCount();
-	UINT n = mWaves.ColumnCount();
-	int k = 0;
-	for (UINT i = 0; i < m - 1; ++i)
-	{
-		for (DWORD j = 0; j < n - 1; ++j)
-		{
-			indices[k] = i*n + j;
-			indices[k + 1] = i*n + j + 1;
-			indices[k + 2] = (i + 1)*n + j;
-
-			indices[k + 3] = (i + 1)*n + j;
-			indices[k + 4] = i*n + j + 1;
-			indices[k + 5] = (i + 1)*n + j + 1;
-
-			k += 6; // next quad
-		}
-	}
-
-	D3D11_BUFFER_DESC ibd;
-	ibd.Usage = D3D11_USAGE_IMMUTABLE;
-	ibd.ByteWidth = sizeof(UINT) * indices.size();
-	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	ibd.CPUAccessFlags = 0;
-	ibd.MiscFlags = 0;
-	D3D11_SUBRESOURCE_DATA iinitData;
-	iinitData.pSysMem = &indices[0];
-	HR(mDevice->CreateBuffer(&ibd, &iinitData, &mWavesIB));
-}
-
-void MyApp::BuildCrateGeometryBuffers()
-{
-	GeometryGenerator::MeshData box;
-
-	GeometryGenerator geoGen;
-	geoGen.CreateBox(1.0f, 1.0f, 1.0f, box);
-
-	//
-	// Extract the vertex elements we are interested in and pack the
-	// vertices of all the meshes into one vertex buffer.
-	//
-
-	std::vector<Vertex> vertices(box.Vertices.size());
-
-	for (UINT i = 0; i < box.Vertices.size(); ++i)
-	{
-		vertices[i].Pos = box.Vertices[i].Position;
-		vertices[i].Normal = box.Vertices[i].Normal;
-		vertices[i].Tex = box.Vertices[i].TexC;
-	}
-
-	D3D11_BUFFER_DESC vbd;
-	vbd.Usage = D3D11_USAGE_IMMUTABLE;
-	vbd.ByteWidth = sizeof(Vertex) * box.Vertices.size();
-	vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vbd.CPUAccessFlags = 0;
-	vbd.MiscFlags = 0;
-	D3D11_SUBRESOURCE_DATA vinitData;
-	vinitData.pSysMem = &vertices[0];
-	HR(mDevice->CreateBuffer(&vbd, &vinitData, &mBoxVB));
-
-	//
-	// Pack the indices of all the meshes into one index buffer.
-	//
-
-	D3D11_BUFFER_DESC ibd;
-	ibd.Usage = D3D11_USAGE_IMMUTABLE;
-	ibd.ByteWidth = sizeof(UINT) * box.Indices.size();
-	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	ibd.CPUAccessFlags = 0;
-	ibd.MiscFlags = 0;
-	D3D11_SUBRESOURCE_DATA iinitData;
-	iinitData.pSysMem = &box.Indices[0];
-	HR(mDevice->CreateBuffer(&ibd, &iinitData, &mBoxIB));
-}
-
 void MyApp::PositionObjects()
 {
-	DirectX::XMMATRIX I = DirectX::XMMatrixIdentity();
-	XMStoreFloat4x4(&mLandWorld, I);
-	XMStoreFloat4x4(&mWavesWorld, I);
+	mWaveObject->SetAmbient(DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f));
+	mWaveObject->SetDiffuse(DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 0.5f));
+	mWaveObject->SetSpecular(DirectX::XMFLOAT4(0.8f, 0.8f, 0.8f, 32.0f));
 
-	DirectX::XMMATRIX boxScale = DirectX::XMMatrixScaling(15.0f, 15.0f, 15.0f);
-	DirectX::XMMATRIX boxOffset = DirectX::XMMatrixTranslation(8.0f, 5.0f, -15.0f);
-	XMStoreFloat4x4(&mBoxWorld, boxScale*boxOffset);
+	mHillObject->SetTextureScaling(10.0f, 10.0f);
+	mHillObject->SetAmbient(DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f));
+	mHillObject->SetDiffuse(DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
+	mHillObject->SetSpecular(DirectX::XMFLOAT4(0.2f, 0.2f, 0.2f, 16.0f));
 
-	DirectX::XMMATRIX grassTexScale = DirectX::XMMatrixScaling(10.0f, 10.0f, 0.0f);
-	XMStoreFloat4x4(&mGrassTexTransform, grassTexScale);
+	mBoxObject->Translate(8.0f, 5.0f, -15.0f);
+	mBoxObject->Rotate(0.0f, 0.0f, 0.0f);
+	mBoxObject->Scale(15.0f, 15.0f, 15.0f);
 
-	mLandMat.Ambient = DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
-	mLandMat.Diffuse = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-	mLandMat.Specular = DirectX::XMFLOAT4(0.2f, 0.2f, 0.2f, 16.0f);
+	mBoxObject->SetAmbient(DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f));
+	mBoxObject->SetDiffuse(DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
+	mBoxObject->SetSpecular(DirectX::XMFLOAT4(0.4f, 0.4f, 0.4f, 16.0f));
 
-	mWavesMat.Ambient = DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
-	mWavesMat.Diffuse = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 0.5f);
-	mWavesMat.Specular = DirectX::XMFLOAT4(0.8f, 0.8f, 0.8f, 32.0f);
-
-	mBoxMat.Ambient = DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
-	mBoxMat.Diffuse = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-	mBoxMat.Specular = DirectX::XMFLOAT4(0.4f, 0.4f, 0.4f, 16.0f);
+	LoadTextureToSRV(mWaveObject->GetDiffuseMapSRV(), L"Textures/water2.dds");
+	LoadTextureToSRV(mHillObject->GetDiffuseMapSRV(), L"Textures/grass.dds");
+	LoadTextureToSRV(mBoxObject->GetDiffuseMapSRV(), L"Textures/wirefence.dds");
 }
 
 void MyApp::CreateVertexShader(ID3D11VertexShader** shader, LPCWSTR filename, LPCSTR entryPoint)
@@ -510,58 +330,12 @@ void MyApp::UpdateScene(float dt)
 	if (GetAsyncKeyState('D') & 0x8000)
 		mCamera.Strafe(10.0f*dt);
 
-	//
-	// Every quarter second, generate a random wave.
-	//
-	static float t_base = 0.0f;
-	if ((mTimer.TotalTime() - t_base) >= 0.1f)
-	{
-		t_base += 0.1f;
-
-		DWORD i = 5 + rand() % (mWaves.RowCount() - 10);
-		DWORD j = 5 + rand() % (mWaves.ColumnCount() - 10);
-
-		float r = MathHelper::RandF(0.5f, 1.0f);
-
-		mWaves.Disturb(i, j, r);
-	}
-
-	mWaves.Update(dt);
-
-	//
-	// Update the wave vertex buffer with the new solution.
-	//
-
 	D3D11_MAPPED_SUBRESOURCE mappedData;
-	HR(mImmediateContext->Map(mWavesVB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedData));
+	HR(mImmediateContext->Map(*mWaveObject->GetVertexBuffer(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedData));
 
-	Vertex* v = reinterpret_cast<Vertex*>(mappedData.pData);
-	for (UINT i = 0; i < mWaves.VertexCount(); ++i)
-	{
-		v[i].Pos = mWaves[i];
-		v[i].Normal = mWaves.Normal(i);
+	mWaveObject->Update(mTimer.TotalTime(), dt, mappedData.pData);
 
-		// Derive tex-coords in [0,1] from position.
-		v[i].Tex.x = 0.5f + mWaves[i].x / mWaves.Width();
-		v[i].Tex.y = 0.5f - mWaves[i].z / mWaves.Depth();
-	}
-
-	mImmediateContext->Unmap(mWavesVB, 0);
-
-	//
-	// Animate water texture coordinates.
-	//
-
-	// Tile water texture.
-	DirectX::XMMATRIX wavesScale = DirectX::XMMatrixScaling(5.0f, 5.0f, 0.0f);
-
-	// Translate texture over time.
-	mWaterTexOffset.y += 0.05f*dt;
-	mWaterTexOffset.x += 0.1f*dt;
-	DirectX::XMMATRIX wavesOffset = DirectX::XMMatrixTranslation(mWaterTexOffset.x, mWaterTexOffset.y, 0.0f);
-
-	// Combine scale and translation.
-	XMStoreFloat4x4(&mWaterTexTransform, wavesScale*wavesOffset);
+	mImmediateContext->Unmap(*mWaveObject->GetVertexBuffer(), 0);
 }
 
 void MyApp::DrawScene()
@@ -603,7 +377,7 @@ void MyApp::DrawScene()
 	// Draw Box
 	{
 		// Compute object matrices
-		world = XMLoadFloat4x4(&mBoxWorld);
+		world = XMLoadFloat4x4(&mBoxObject->GetWorldTransform());
 		worldInvTranspose = MathHelper::InverseTranspose(world);
 		worldViewProj = world*viewProj;
 
@@ -613,15 +387,15 @@ void MyApp::DrawScene()
 		cbPerObject->world = DirectX::XMMatrixTranspose(world);
 		cbPerObject->worldInvTranpose = DirectX::XMMatrixTranspose(worldInvTranspose);
 		cbPerObject->worldViewProj = DirectX::XMMatrixTranspose(worldViewProj);
-		cbPerObject->texTransform = DirectX::XMMatrixTranspose(DirectX::XMMatrixIdentity());
-		cbPerObject->material = mBoxMat;
+		cbPerObject->texTransform = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&mBoxObject->GetTexTransform()));
+		cbPerObject->material = mBoxObject->GetMaterial();
 		mImmediateContext->Unmap(mConstBufferPerObject, 0);
 
 		// Set Input Assembler Stage
 		mImmediateContext->IASetInputLayout(mVertexLayout);
 		mImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		mImmediateContext->IASetVertexBuffers(0, 1, &mBoxVB, &stride, &offset);
-		mImmediateContext->IASetIndexBuffer(mBoxIB, DXGI_FORMAT_R32_UINT, 0);
+		mImmediateContext->IASetVertexBuffers(0, 1, mBoxObject->GetVertexBuffer(), &stride, &offset);
+		mImmediateContext->IASetIndexBuffer(*mBoxObject->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
 
 		// Set Vertex Shader Stage
 		mImmediateContext->VSSetConstantBuffers(0, 1, &mConstBufferPerFrame);
@@ -634,7 +408,7 @@ void MyApp::DrawScene()
 		// Set Pixel Shader Stage	
 		mImmediateContext->PSSetConstantBuffers(0, 1, &mConstBufferPerFrame);
 		mImmediateContext->PSSetConstantBuffers(1, 1, &mConstBufferPerObject);
-		mImmediateContext->PSSetShaderResources(0, 1, &mBoxMapSRV);
+		mImmediateContext->PSSetShaderResources(0, 1, mBoxObject->GetDiffuseMapSRV());
 		mImmediateContext->PSSetSamplers(0, 1, &mSamplerState);
 		mImmediateContext->PSSetShader(mPixelShader, NULL, 0);
 
@@ -642,13 +416,13 @@ void MyApp::DrawScene()
 		mImmediateContext->OMSetBlendState(0, blendFactor, 0xffffffff);
 
 		// Draw Object
-		mImmediateContext->DrawIndexed(36, 0, 0);
+		mImmediateContext->DrawIndexed(mBoxObject->GetIndexCount(), 0, 0);
 	}
 
 	// Draw Hills
 	{
 		// Compute object matrices
-		world = XMLoadFloat4x4(&mLandWorld);
+		world = XMLoadFloat4x4(&mHillObject->GetWorldTransform());
 		worldInvTranspose = MathHelper::InverseTranspose(world);
 		worldViewProj = world*viewProj;
 
@@ -658,13 +432,13 @@ void MyApp::DrawScene()
 		cbPerObject->world = DirectX::XMMatrixTranspose(world);
 		cbPerObject->worldInvTranpose = DirectX::XMMatrixTranspose(worldInvTranspose);
 		cbPerObject->worldViewProj = DirectX::XMMatrixTranspose(worldViewProj);
-		cbPerObject->texTransform = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&mGrassTexTransform));
-		cbPerObject->material = mLandMat;
+		cbPerObject->texTransform = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&mHillObject->GetTexTransform()));
+		cbPerObject->material = mHillObject->GetMaterial();
 		mImmediateContext->Unmap(mConstBufferPerObject, 0);
 
 		// Set Input Assembler Stage
-		mImmediateContext->IASetVertexBuffers(0, 1, &mLandVB, &stride, &offset);
-		mImmediateContext->IASetIndexBuffer(mLandIB, DXGI_FORMAT_R32_UINT, 0);
+		mImmediateContext->IASetVertexBuffers(0, 1, mHillObject->GetVertexBuffer(), &stride, &offset);
+		mImmediateContext->IASetIndexBuffer(*mHillObject->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
 
 		// Set Vertex Shader Stage
 		mImmediateContext->VSSetConstantBuffers(1, 1, &mConstBufferPerObject);
@@ -674,16 +448,16 @@ void MyApp::DrawScene()
 
 		// Set Pixel Shader Stage	
 		mImmediateContext->PSSetConstantBuffers(1, 1, &mConstBufferPerObject);
-		mImmediateContext->PSSetShaderResources(0, 1, &mGrassMapSRV);
+		mImmediateContext->PSSetShaderResources(0, 1, mHillObject->GetDiffuseMapSRV());
 
 		// Draw Object
-		mImmediateContext->DrawIndexed(mLandIndexCount, 0, 0);
+		mImmediateContext->DrawIndexed(mHillObject->GetIndexCount(), 0, 0);
 	}
 
 	// Draw Waves
 	{
 		// Compute object matrices
-		world = XMLoadFloat4x4(&mWavesWorld);
+		world = XMLoadFloat4x4(&mWaveObject->GetWorldTransform());
 		worldInvTranspose = MathHelper::InverseTranspose(world);
 		worldViewProj = world*viewProj;
 
@@ -693,13 +467,13 @@ void MyApp::DrawScene()
 		cbPerObject->world = DirectX::XMMatrixTranspose(world);
 		cbPerObject->worldInvTranpose = DirectX::XMMatrixTranspose(worldInvTranspose);
 		cbPerObject->worldViewProj = DirectX::XMMatrixTranspose(worldViewProj);
-		cbPerObject->texTransform = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&mWaterTexTransform));
-		cbPerObject->material = mWavesMat;
+		cbPerObject->texTransform = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&mWaveObject->GetTexTransform()));
+		cbPerObject->material = mWaveObject->GetMaterial();
 		mImmediateContext->Unmap(mConstBufferPerObject, 0);
 
 		// Set Input Assembler Stage
-		mImmediateContext->IASetVertexBuffers(0, 1, &mWavesVB, &stride, &offset);
-		mImmediateContext->IASetIndexBuffer(mWavesIB, DXGI_FORMAT_R32_UINT, 0);
+		mImmediateContext->IASetVertexBuffers(0, 1, mWaveObject->GetVertexBuffer(), &stride, &offset);
+		mImmediateContext->IASetIndexBuffer(*mWaveObject->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
 
 		// Set Vertex Shader Stage
 		mImmediateContext->VSSetConstantBuffers(1, 1, &mConstBufferPerObject);
@@ -709,13 +483,13 @@ void MyApp::DrawScene()
 
 		// Set Pixel Shader Stage	
 		mImmediateContext->PSSetConstantBuffers(1, 1, &mConstBufferPerObject);
-		mImmediateContext->PSSetShaderResources(0, 1, &mWavesMapSRV);
+		mImmediateContext->PSSetShaderResources(0, 1, mWaveObject->GetDiffuseMapSRV());
 
 		// Set Output Merger Stage
 		mImmediateContext->OMSetBlendState(mBlendState, blendFactor, 0xffffffff);
 
 		// Draw Object
-		mImmediateContext->DrawIndexed(3 * mWaves.TriangleCount(), 0, 0);
+		mImmediateContext->DrawIndexed(mWaveObject->GetIndexCount(), 0, 0);
 	}
 
 	HR(mSwapChain->Present(0, 0));

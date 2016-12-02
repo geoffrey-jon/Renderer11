@@ -123,3 +123,10 @@ DirectX::XMFLOAT4X4 GObject::GetTexTransform()
 {
 	return mTexTransform;
 }
+
+void GObject::SetTextureScaling(float x, float y)
+{
+	DirectX::XMMATRIX grassTexScale = DirectX::XMMatrixScaling(x, y, 0.0f);
+	XMStoreFloat4x4(&mTexTransform, grassTexScale);
+}
+

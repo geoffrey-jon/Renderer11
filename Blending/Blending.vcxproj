@@ -183,8 +183,10 @@
     <ClCompile Include="..\Common\Utility\GCube.cpp" />
     <ClCompile Include="..\Common\Utility\GeometryGenerator.cpp" />
     <ClCompile Include="..\Common\Utility\GFirstPersonCamera.cpp" />
+    <ClCompile Include="..\Common\Utility\GHill.cpp" />
     <ClCompile Include="..\Common\Utility\GObject.cpp" />
     <ClCompile Include="..\Common\Utility\GPlane.cpp" />
+    <ClCompile Include="..\Common\Utility\GWave.cpp" />
     <ClCompile Include="..\Common\Utility\MathHelper.cpp" />
     <ClCompile Include="..\Common\Utility\Waves.cpp" />
     <ClCompile Include="Source\Main.cpp" />
@@ -201,8 +203,10 @@
     <ClInclude Include="..\Common\Utility\GCube.h" />
     <ClInclude Include="..\Common\Utility\GeometryGenerator.h" />
     <ClInclude Include="..\Common\Utility\GFirstPersonCamera.h" />
+    <ClInclude Include="..\Common\Utility\GHill.h" />
     <ClInclude Include="..\Common\Utility\GObject.h" />
     <ClInclude Include="..\Common\Utility\GPlane.h" />
+    <ClInclude Include="..\Common\Utility\GWave.h" />
     <ClInclude Include="..\Common\Utility\LightHelper.h" />
     <ClInclude Include="..\Common\Utility\MathHelper.h" />
     <ClInclude Include="..\Common\Utility\Waves.h" />

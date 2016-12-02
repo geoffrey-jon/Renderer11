@@ -66,6 +66,12 @@
     <ClCompile Include="..\Common\Utility\Waves.cpp">
       <Filter>Common\Utility</Filter>
     </ClCompile>
+    <ClCompile Include="..\Common\Utility\GHill.cpp">
+      <Filter>Common\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\Utility\GWave.cpp">
+      <Filter>Common\Utility</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\MyApp.h">
@@ -117,6 +123,12 @@
       <Filter>Common\Utility</Filter>
     </ClInclude>
     <ClInclude Include="..\Common\Utility\Waves.h">
+      <Filter>Common\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Utility\GHill.h">
+      <Filter>Common\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Utility\GWave.h">
       <Filter>Common\Utility</Filter>
     </ClInclude>
   </ItemGroup>

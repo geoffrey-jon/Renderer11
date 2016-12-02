@@ -1,6 +1,6 @@
-/*  =======================
-	Summary: 
-	=======================  */
+/*  ======================
+	Summary: Blending Demo
+	======================  */
 
 #ifndef MYAPP_H
 #define MYAPP_H
@@ -9,7 +9,8 @@
 #include "Vertex.h"
 #include "GObject.h"
 #include "GCube.h"
-#include "GPlane.h"
+#include "GHill.h"
+#include "GWave.h"
 #include "GFirstPersonCamera.h"
 #include "Waves.h"
 
@@ -34,13 +35,6 @@ struct ConstBufferPerFrame
 	DirectX::XMFLOAT4 fogColor;
 };
 
-enum RenderOptions
-{
-	Lighting = 0,
-	Textures = 1,
-	TexturesAndFog = 2
-};
-
 class MyApp : public D3DApp
 {
 public:
@@ -62,7 +56,7 @@ private:
 	void CreateSamplerState();
 	void CreateBlendState();
 
-	void CreateGeometryBuffers(GObject* obj);
+	void CreateGeometryBuffers(GObject* obj, bool dynamic = false);
 
 	void CreateConstantBuffer(ID3D11Buffer** buffer, UINT size);
 	void CreateVertexShader(ID3D11VertexShader** shader, LPCWSTR filename, LPCSTR entryPoint);
@@ -73,13 +67,6 @@ private:
 	void InitUserInput();
 	void PositionObjects();
 	void SetupStaticLights();
-
-	float GetHillHeight(float x, float z)const;
-	DirectX::XMFLOAT3 GetHillNormal(float x, float z)const;
-
-	void BuildLandGeometryBuffers();
-	void BuildWaveGeometryBuffers();
-	void BuildCrateGeometryBuffers();
 
 private:
 	// Constant Buffers
@@ -109,37 +96,9 @@ private:
 	POINT mLastMousePos;
 
 	// Objects
-
-
-
-	ID3D11Buffer* mLandVB;
-	ID3D11Buffer* mLandIB;
-
-	ID3D11Buffer* mWavesVB;
-	ID3D11Buffer* mWavesIB;
-
-	ID3D11Buffer* mBoxVB;
-	ID3D11Buffer* mBoxIB;
-
-	ID3D11ShaderResourceView* mGrassMapSRV;
-	ID3D11ShaderResourceView* mWavesMapSRV;
-	ID3D11ShaderResourceView* mBoxMapSRV;
-
-	Waves mWaves;
-
-	Material mLandMat;
-	Material mWavesMat;
-	Material mBoxMat;
-
-	DirectX::XMFLOAT4X4 mGrassTexTransform;
-	DirectX::XMFLOAT4X4 mWaterTexTransform;
-	DirectX::XMFLOAT4X4 mLandWorld;
-	DirectX::XMFLOAT4X4 mWavesWorld;
-	DirectX::XMFLOAT4X4 mBoxWorld;
-
-	UINT mLandIndexCount;
-
-	DirectX::XMFLOAT2 mWaterTexOffset;
+	GCube* mBoxObject;
+	GHill* mHillObject;
+	GWave* mWaveObject;
 };
 
 #endif // MYAPP_H
