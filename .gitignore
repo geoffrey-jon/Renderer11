@@ -8,6 +8,8 @@ FirstPersonCamera/Bin/
 FirstPersonCamera/Intermediate/
 Blending/Bin/
 Blending/Intermediate/
+StencilDemo/Bin/
+StencilDemo/Intermediate/
 
 *.sdf
 *.opendb

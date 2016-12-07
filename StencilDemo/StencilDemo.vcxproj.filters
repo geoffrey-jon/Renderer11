@@ -1,0 +1,167 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{b2d3bfbe-4f65-49da-8853-edd9c1ac43b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{6dbe3a7a-cfb4-4d18-bba8-496a799b18ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common\ThirdParty">
+      <UniqueIdentifier>{996f7b95-9f63-4748-ba9a-593803dfa432}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common\Utility">
+      <UniqueIdentifier>{d8d84a9c-2b2a-4ebf-91e3-ce355db952b0}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Source\MyApp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\Utility\D3DApp.cpp">
+      <Filter>Common\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\Utility\GameTimer.cpp">
+      <Filter>Common\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\Utility\GeometryGenerator.cpp">
+      <Filter>Common\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\Utility\MathHelper.cpp">
+      <Filter>Common\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\ThirdParty\DDSTextureLoader.cpp">
+      <Filter>Common\ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\ThirdParty\DXErr.cpp">
+      <Filter>Common\ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\Utility\GObject.cpp">
+      <Filter>Common\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\Utility\GFirstPersonCamera.cpp">
+      <Filter>Common\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\Utility\GCube.cpp">
+      <Filter>Common\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\Utility\GPlane.cpp">
+      <Filter>Common\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\Utility\Waves.cpp">
+      <Filter>Common\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\Utility\GHill.cpp">
+      <Filter>Common\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\Utility\GWave.cpp">
+      <Filter>Common\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\Utility\GPlaneXZ.cpp">
+      <Filter>Common\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\Utility\GPlaneXY.cpp">
+      <Filter>Common\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\Utility\GPlaneYZ.cpp">
+      <Filter>Common\Utility</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\MyApp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Utility\D3DApp.h">
+      <Filter>Common\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Utility\D3DUtil.h">
+      <Filter>Common\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Utility\GameTimer.h">
+      <Filter>Common\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Utility\GeometryGenerator.h">
+      <Filter>Common\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Utility\LightHelper.h">
+      <Filter>Common\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Utility\MathHelper.h">
+      <Filter>Common\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\ThirdParty\D3DX11Effect.h">
+      <Filter>Common\ThirdParty</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\ThirdParty\DDSTextureLoader.h">
+      <Filter>Common\ThirdParty</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\ThirdParty\DXErr.h">
+      <Filter>Common\ThirdParty</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Utility\D3DTypes.h">
+      <Filter>Common\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vertex.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Utility\GObject.h">
+      <Filter>Common\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Utility\GFirstPersonCamera.h">
+      <Filter>Common\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Utility\GCube.h">
+      <Filter>Common\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Utility\GPlane.h">
+      <Filter>Common\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Utility\Waves.h">
+      <Filter>Common\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Utility\GHill.h">
+      <Filter>Common\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Utility\GWave.h">
+      <Filter>Common\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Utility\GPlaneXZ.h">
+      <Filter>Common\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Utility\GPlaneXY.h">
+      <Filter>Common\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Utility\GPlaneYZ.h">
+      <Filter>Common\Utility</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Shaders\PixelShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\VertexShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\LightHelper.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\PixelShaderNoTexture.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+  </ItemGroup>
+</Project>
