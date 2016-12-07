@@ -71,6 +71,10 @@ private:
 	void PositionObjects();
 	void SetupStaticLights();
 
+	void DrawObject(GObject* object);
+	void DrawObjectTransform(GObject* object, DirectX::XMMATRIX& tranform);
+	void DrawObjectShadow(GObject* object, DirectX::XMMATRIX& tranform);
+
 private:
 	// Constant Buffers
 	ID3D11Buffer* mConstBufferPerFrame;

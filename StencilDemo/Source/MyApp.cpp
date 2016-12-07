@@ -467,11 +467,10 @@ void MyApp::DrawScene()
 	mImmediateContext->ClearRenderTargetView(mRenderTargetView, reinterpret_cast<const float*>(&Colors::Black));
 	mImmediateContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-	// Multiply the view and projection matrics
+	// Update Camera
 	mCamera.UpdateViewMatrix();
-	DirectX::XMMATRIX viewProj = mCamera.ViewProj();
 
-	// Set per frame constants.
+	// Set per frame constants
 	D3D11_MAPPED_SUBRESOURCE cbPerFrameResource;
 	ConstBufferPerFrame* cbPerFrame;
 
@@ -483,6 +482,10 @@ void MyApp::DrawScene()
 	DirectX::XMStoreFloat4(&cbPerFrame->fogColor, Colors::Black);
 	mImmediateContext->Unmap(mConstBufferPerFrame, 0);
 
+	mImmediateContext->VSSetConstantBuffers(0, 1, &mConstBufferPerFrame);
+	mImmediateContext->PSSetConstantBuffers(0, 1, &mConstBufferPerFrame);
+
+	// Set constant buffer for lights
 	D3D11_MAPPED_SUBRESOURCE cbLightsResource;
 	ConstBufferLights* cbLights;
 
@@ -492,353 +495,210 @@ void MyApp::DrawScene()
 	cbLights->dirLight1 = mDirLights[1];
 	cbLights->dirLight2 = mDirLights[2];
 	mImmediateContext->Unmap(mConstBufferLights, 0);
-	
-	D3D11_MAPPED_SUBRESOURCE cbPerObjectResource;
-	ConstBufferPerObject* cbPerObject;
 
+	mImmediateContext->VSSetConstantBuffers(1, 1, &mConstBufferLights);
+	mImmediateContext->PSSetConstantBuffers(1, 1, &mConstBufferLights);
+
+	mImmediateContext->IASetInputLayout(mVertexLayout);
+	mImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	mImmediateContext->VSSetShader(mVertexShader, NULL, 0);
+	mImmediateContext->PSSetSamplers(0, 1, &mSamplerState);
+
+	float blendFactor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	mImmediateContext->RSSetState(0);
+	mImmediateContext->OMSetBlendState(0, blendFactor, 0xffffffff);
+	mImmediateContext->OMSetDepthStencilState(0, 0);
+
+	// Draw Skull
+	mImmediateContext->PSSetShader(mPixelShaderNoTexture, NULL, 0);
+	DrawObject(mSkullObject);
+
+	// Draw Floor and Wall Pieces
+	mImmediateContext->PSSetShader(mPixelShader, NULL, 0);
+	DrawObject(mFloorObject);
+	DrawObject(mWallPiece1);
+	DrawObject(mWallPiece2);
+	DrawObject(mWallPiece3);
+
+	// Draw Mirror to Stencil Buffer
+	mImmediateContext->OMSetBlendState(mNoRenderTargetWritesBS, blendFactor, 0xffffffff); // Do not write to render target.
+	mImmediateContext->OMSetDepthStencilState(mMarkMirrorDSS, 1); // Render visible mirror pixels to stencil buffer. Do not write mirror depth to depth buffer at this point, otherwise it will occlude the reflection.
+
+	DrawObject(mMirrorObject);
+
+	// Draw the skull reflection.
+	DirectX::XMVECTOR mirrorPlane = DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f); // xy plane
+	DirectX::XMMATRIX R = DirectX::XMMatrixReflect(mirrorPlane);
+
+	DirectionalLight ReflectedDirLights[3];
+	for (int i = 0; i < 3; ++i)
+	{
+		ReflectedDirLights[i] = mDirLights[i];
+		DirectX::XMVECTOR lightDir = XMLoadFloat3(&ReflectedDirLights[i].Direction);
+		DirectX::XMVECTOR reflectedLightDir = XMVector3TransformNormal(lightDir, R);
+		XMStoreFloat3(&ReflectedDirLights[i].Direction, reflectedLightDir);
+	}
+
+	mImmediateContext->Map(mConstBufferLights, 0, D3D11_MAP_WRITE_DISCARD, 0, &cbLightsResource);
+	cbLights = (ConstBufferLights*)cbLightsResource.pData;
+	cbLights->dirLight0 = ReflectedDirLights[0];
+	cbLights->dirLight1 = ReflectedDirLights[1];
+	cbLights->dirLight2 = ReflectedDirLights[2];
+	mImmediateContext->Unmap(mConstBufferLights, 0);
+
+	mImmediateContext->RSSetState(mCullClockwiseRS); // Cull clockwise triangles for reflection.
+	mImmediateContext->OMSetBlendState(0, blendFactor, 0xffffffff);
+	mImmediateContext->OMSetDepthStencilState(mDrawReflectionDSS, 1); // Only draw reflection into visible mirror pixels as marked by the stencil buffer. 
+
+	DrawObjectTransform(mSkullObject, R);
+
+	// Draw the mirror to the back buffer as usual but with transparency blending so the reflection shows through.
+	mImmediateContext->Map(mConstBufferLights, 0, D3D11_MAP_WRITE_DISCARD, 0, &cbLightsResource);
+	cbLights = (ConstBufferLights*)cbLightsResource.pData;
+	cbLights->dirLight0 = mDirLights[0];
+	cbLights->dirLight1 = mDirLights[1];
+	cbLights->dirLight2 = mDirLights[2];
+	mImmediateContext->Unmap(mConstBufferLights, 0);
+
+	mImmediateContext->RSSetState(0);
+	mImmediateContext->OMSetBlendState(mTransparentBS, blendFactor, 0xffffffff);
+	mImmediateContext->OMSetDepthStencilState(0, 0);
+
+	DrawObject(mMirrorObject);
+
+	// Draw the skull shadow.
+	mImmediateContext->OMSetDepthStencilState(mNoDoubleBlendDSS, 0);
+
+	DirectX::XMVECTOR shadowPlane = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f); // xz plane
+	DirectX::XMVECTOR toMainLight = DirectX::XMVectorNegate(DirectX::XMLoadFloat3(&mDirLights[0].Direction));
+	DirectX::XMMATRIX S = DirectX::XMMatrixShadow(shadowPlane, toMainLight);
+	DirectX::XMMATRIX shadowOffsetY = DirectX::XMMatrixTranslation(0.0f, 0.001f, 0.0f);
+
+	DrawObjectShadow(mSkullObject, S*shadowOffsetY);
+
+	HR(mSwapChain->Present(0, 0));
+}
+
+void MyApp::DrawObject(GObject* object)
+{
 	DirectX::XMMATRIX world;
 	DirectX::XMMATRIX worldInvTranspose;
 	DirectX::XMMATRIX worldViewProj;
 
-	float blendFactor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	// Compute object matrices
+	world = XMLoadFloat4x4(&object->GetWorldTransform());
+	worldInvTranspose = MathHelper::InverseTranspose(world);
+	worldViewProj = world*mCamera.ViewProj();
+
+	D3D11_MAPPED_SUBRESOURCE cbPerObjectResource;
+	ConstBufferPerObject* cbPerObject;
+
+	// Set per object constants
+	mImmediateContext->Map(mConstBufferPerObject, 0, D3D11_MAP_WRITE_DISCARD, 0, &cbPerObjectResource);
+	cbPerObject = (ConstBufferPerObject*)cbPerObjectResource.pData;
+	cbPerObject->world = DirectX::XMMatrixTranspose(world);
+	cbPerObject->worldInvTranpose = DirectX::XMMatrixTranspose(worldInvTranspose);
+	cbPerObject->worldViewProj = DirectX::XMMatrixTranspose(worldViewProj);
+	cbPerObject->texTransform = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&object->GetTexTransform()));
+	cbPerObject->material = object->GetMaterial();
+	mImmediateContext->Unmap(mConstBufferPerObject, 0);
+
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 
-	// Draw Skull
+	// Set Input Assembler Stage
+	mImmediateContext->IASetVertexBuffers(0, 1, object->GetVertexBuffer(), &stride, &offset);
+	mImmediateContext->IASetIndexBuffer(*object->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+
+	// Set Vertex Shader Stage
+	mImmediateContext->VSSetConstantBuffers(2, 1, &mConstBufferPerObject);
+	mImmediateContext->PSSetConstantBuffers(2, 1, &mConstBufferPerObject);
+
+	if (object->GetDiffuseMapSRV())
 	{
-		// Compute object matrices
-		world = XMLoadFloat4x4(&mSkullObject->GetWorldTransform());
-		worldInvTranspose = MathHelper::InverseTranspose(world);
-		worldViewProj = world*viewProj;
-
-		// Set per object constants
-		mImmediateContext->Map(mConstBufferPerObject, 0, D3D11_MAP_WRITE_DISCARD, 0, &cbPerObjectResource);
-		cbPerObject = (ConstBufferPerObject*)cbPerObjectResource.pData;
-		cbPerObject->world = DirectX::XMMatrixTranspose(world);
-		cbPerObject->worldInvTranpose = DirectX::XMMatrixTranspose(worldInvTranspose);
-		cbPerObject->worldViewProj = DirectX::XMMatrixTranspose(worldViewProj);
-		cbPerObject->texTransform = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&mSkullObject->GetTexTransform()));
-		cbPerObject->material = mSkullObject->GetMaterial();
-		mImmediateContext->Unmap(mConstBufferPerObject, 0);
-
-		// Set Input Assembler Stage
-		mImmediateContext->IASetInputLayout(mVertexLayout);
-		mImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		mImmediateContext->IASetVertexBuffers(0, 1, mSkullObject->GetVertexBuffer(), &stride, &offset);
-		mImmediateContext->IASetIndexBuffer(*mSkullObject->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
-
-		// Set Vertex Shader Stage
-		mImmediateContext->VSSetConstantBuffers(0, 1, &mConstBufferPerFrame);
-		mImmediateContext->VSSetConstantBuffers(1, 1, &mConstBufferLights);
-		mImmediateContext->VSSetConstantBuffers(2, 1, &mConstBufferPerObject);
-		mImmediateContext->VSSetShader(mVertexShader, NULL, 0);
-
-		// Set Rasterizer Stage
-		mImmediateContext->RSSetState(0);
-
-		// Set Pixel Shader Stage	
-		mImmediateContext->PSSetConstantBuffers(0, 1, &mConstBufferPerFrame);
-		mImmediateContext->PSSetConstantBuffers(1, 1, &mConstBufferLights);
-		mImmediateContext->PSSetConstantBuffers(2, 1, &mConstBufferPerObject);
-		mImmediateContext->PSSetSamplers(0, 1, &mSamplerState);
-		mImmediateContext->PSSetShader(mPixelShaderNoTexture, NULL, 0);
-
-		// Set Output Merger Stage
-		mImmediateContext->OMSetBlendState(0, blendFactor, 0xffffffff);
-
-		// Draw Object
-		mImmediateContext->DrawIndexed(mSkullObject->GetIndexCount(), 0, 0);
+		mImmediateContext->PSSetShaderResources(0, 1, object->GetDiffuseMapSRV());
 	}
 
-	// Draw Floor
-	{
-		// Compute object matrices
-		world = XMLoadFloat4x4(&mFloorObject->GetWorldTransform());
-		worldInvTranspose = MathHelper::InverseTranspose(world);
-		worldViewProj = world*viewProj;
+	// Draw Object
+	mImmediateContext->DrawIndexed(object->GetIndexCount(), 0, 0);
+}
 
-		// Set per object constants
-		mImmediateContext->Map(mConstBufferPerObject, 0, D3D11_MAP_WRITE_DISCARD, 0, &cbPerObjectResource);
-		cbPerObject = (ConstBufferPerObject*)cbPerObjectResource.pData;
-		cbPerObject->world = DirectX::XMMatrixTranspose(world);
-		cbPerObject->worldInvTranpose = DirectX::XMMatrixTranspose(worldInvTranspose);
-		cbPerObject->worldViewProj = DirectX::XMMatrixTranspose(worldViewProj);
-		cbPerObject->texTransform = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&mFloorObject->GetTexTransform()));
-		cbPerObject->material = mFloorObject->GetMaterial();
-		mImmediateContext->Unmap(mConstBufferPerObject, 0);
+void MyApp::DrawObjectTransform(GObject* object, DirectX::XMMATRIX& tranform)
+{
+	DirectX::XMMATRIX world;
+	DirectX::XMMATRIX worldInvTranspose;
+	DirectX::XMMATRIX worldViewProj;
 
-		// Set Input Assembler Stage
-		mImmediateContext->IASetVertexBuffers(0, 1, mFloorObject->GetVertexBuffer(), &stride, &offset);
-		mImmediateContext->IASetIndexBuffer(*mFloorObject->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+	// Compute object matrices
+	world = XMLoadFloat4x4(&object->GetWorldTransform()) * tranform;
+	worldInvTranspose = MathHelper::InverseTranspose(world);
+	worldViewProj = world*mCamera.ViewProj();
 
-		// Set Vertex Shader Stage
-		mImmediateContext->VSSetConstantBuffers(2, 1, &mConstBufferPerObject);
+	D3D11_MAPPED_SUBRESOURCE cbPerObjectResource;
+	ConstBufferPerObject* cbPerObject;
 
-		// Set Pixel Shader Stage	
-		mImmediateContext->PSSetConstantBuffers(2, 1, &mConstBufferPerObject);
-		mImmediateContext->PSSetShaderResources(0, 1, mFloorObject->GetDiffuseMapSRV());
-		mImmediateContext->PSSetSamplers(0, 1, &mSamplerState);
-		mImmediateContext->PSSetShader(mPixelShader, NULL, 0);
+	// Set per object constants
+	mImmediateContext->Map(mConstBufferPerObject, 0, D3D11_MAP_WRITE_DISCARD, 0, &cbPerObjectResource);
+	cbPerObject = (ConstBufferPerObject*)cbPerObjectResource.pData;
+	cbPerObject->world = DirectX::XMMatrixTranspose(world);
+	cbPerObject->worldInvTranpose = DirectX::XMMatrixTranspose(worldInvTranspose);
+	cbPerObject->worldViewProj = DirectX::XMMatrixTranspose(worldViewProj);
+	cbPerObject->texTransform = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&object->GetTexTransform()));
+	cbPerObject->material = object->GetMaterial();
+	mImmediateContext->Unmap(mConstBufferPerObject, 0);
 
-		// Draw Object
-		mImmediateContext->DrawIndexed(mFloorObject->GetIndexCount(), 0, 0);
-	}
-	
-	mImmediateContext->PSSetShaderResources(0, 1, mWallPiece1->GetDiffuseMapSRV());
-	mImmediateContext->PSSetSamplers(0, 1, &mSamplerState);
-	mImmediateContext->PSSetShader(mPixelShader, NULL, 0);
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
 
-	// Draw Wall Piece 1
-	{
-		// Compute object matrices
-		world = XMLoadFloat4x4(&mWallPiece1->GetWorldTransform());
-		worldInvTranspose = MathHelper::InverseTranspose(world);
-		worldViewProj = world*viewProj;
+	// Set Input Assembler Stage
+	mImmediateContext->IASetVertexBuffers(0, 1, object->GetVertexBuffer(), &stride, &offset);
+	mImmediateContext->IASetIndexBuffer(*object->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
 
-		// Set per object constants
-		mImmediateContext->Map(mConstBufferPerObject, 0, D3D11_MAP_WRITE_DISCARD, 0, &cbPerObjectResource);
-		cbPerObject = (ConstBufferPerObject*)cbPerObjectResource.pData;
-		cbPerObject->world = DirectX::XMMatrixTranspose(world);
-		cbPerObject->worldInvTranpose = DirectX::XMMatrixTranspose(worldInvTranspose);
-		cbPerObject->worldViewProj = DirectX::XMMatrixTranspose(worldViewProj);
-		cbPerObject->texTransform = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&mWallPiece1->GetTexTransform()));
-		cbPerObject->material = mWallPiece1->GetMaterial();
-		mImmediateContext->Unmap(mConstBufferPerObject, 0);
+	// Set Vertex Shader Stage
+	mImmediateContext->VSSetConstantBuffers(2, 1, &mConstBufferPerObject);
+	mImmediateContext->PSSetConstantBuffers(2, 1, &mConstBufferPerObject);
 
-		// Set Input Assembler Stage
-		mImmediateContext->IASetVertexBuffers(0, 1, mWallPiece1->GetVertexBuffer(), &stride, &offset);
-		mImmediateContext->IASetIndexBuffer(*mWallPiece1->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+	// Draw Object
+	mImmediateContext->DrawIndexed(object->GetIndexCount(), 0, 0);
+}
 
-		// Set Vertex Shader Stage
-		mImmediateContext->VSSetConstantBuffers(2, 1, &mConstBufferPerObject);
+void MyApp::DrawObjectShadow(GObject* object, DirectX::XMMATRIX& tranform)
+{
+	DirectX::XMMATRIX world;
+	DirectX::XMMATRIX worldInvTranspose;
+	DirectX::XMMATRIX worldViewProj;
 
-		// Set Pixel Shader Stage	
-		mImmediateContext->PSSetConstantBuffers(2, 1, &mConstBufferPerObject);
+	// Compute object matrices
+	world = XMLoadFloat4x4(&object->GetWorldTransform()) * tranform;
+	worldInvTranspose = MathHelper::InverseTranspose(world);
+	worldViewProj = world*mCamera.ViewProj();
 
-		mImmediateContext->DrawIndexed(mWallPiece1->GetIndexCount(), 0, 0);
-	}
-	
-	// Draw Wall Piece 2
-	{
-		// Compute object matrices
-		world = XMLoadFloat4x4(&mWallPiece2->GetWorldTransform());
-		worldInvTranspose = MathHelper::InverseTranspose(world);
-		worldViewProj = world*viewProj;
+	D3D11_MAPPED_SUBRESOURCE cbPerObjectResource;
+	ConstBufferPerObject* cbPerObject;
 
-		// Set per object constants
-		mImmediateContext->Map(mConstBufferPerObject, 0, D3D11_MAP_WRITE_DISCARD, 0, &cbPerObjectResource);
-		cbPerObject = (ConstBufferPerObject*)cbPerObjectResource.pData;
-		cbPerObject->world = DirectX::XMMatrixTranspose(world);
-		cbPerObject->worldInvTranpose = DirectX::XMMatrixTranspose(worldInvTranspose);
-		cbPerObject->worldViewProj = DirectX::XMMatrixTranspose(worldViewProj);
-		cbPerObject->texTransform = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&mWallPiece2->GetTexTransform()));
-		cbPerObject->material = mWallPiece2->GetMaterial();
-		mImmediateContext->Unmap(mConstBufferPerObject, 0);
+	// Set per object constants
+	mImmediateContext->Map(mConstBufferPerObject, 0, D3D11_MAP_WRITE_DISCARD, 0, &cbPerObjectResource);
+	cbPerObject = (ConstBufferPerObject*)cbPerObjectResource.pData;
+	cbPerObject->world = DirectX::XMMatrixTranspose(world);
+	cbPerObject->worldInvTranpose = DirectX::XMMatrixTranspose(worldInvTranspose);
+	cbPerObject->worldViewProj = DirectX::XMMatrixTranspose(worldViewProj);
+	cbPerObject->texTransform = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&object->GetTexTransform()));
+	cbPerObject->material = mShadowMat;
+	mImmediateContext->Unmap(mConstBufferPerObject, 0);
 
-		// Set Input Assembler Stage
-		mImmediateContext->IASetVertexBuffers(0, 1, mWallPiece2->GetVertexBuffer(), &stride, &offset);
-		mImmediateContext->IASetIndexBuffer(*mWallPiece2->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
 
-		// Set Vertex Shader Stage
-		mImmediateContext->VSSetConstantBuffers(2, 1, &mConstBufferPerObject);
+	// Set Input Assembler Stage
+	mImmediateContext->IASetVertexBuffers(0, 1, object->GetVertexBuffer(), &stride, &offset);
+	mImmediateContext->IASetIndexBuffer(*object->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
 
-		// Set Pixel Shader Stage	
-		mImmediateContext->PSSetConstantBuffers(2, 1, &mConstBufferPerObject);
+	// Set Vertex Shader Stage
+	mImmediateContext->VSSetConstantBuffers(2, 1, &mConstBufferPerObject);
+	mImmediateContext->PSSetConstantBuffers(2, 1, &mConstBufferPerObject);
 
-		mImmediateContext->DrawIndexed(mWallPiece2->GetIndexCount(), 0, 0);
-	}
-
-	// Draw Wall Piece 3
-	{
-		// Compute object matrices
-		world = XMLoadFloat4x4(&mWallPiece3->GetWorldTransform());
-		worldInvTranspose = MathHelper::InverseTranspose(world);
-		worldViewProj = world*viewProj;
-
-		// Set per object constants
-		mImmediateContext->Map(mConstBufferPerObject, 0, D3D11_MAP_WRITE_DISCARD, 0, &cbPerObjectResource);
-		cbPerObject = (ConstBufferPerObject*)cbPerObjectResource.pData;
-		cbPerObject->world = DirectX::XMMatrixTranspose(world);
-		cbPerObject->worldInvTranpose = DirectX::XMMatrixTranspose(worldInvTranspose);
-		cbPerObject->worldViewProj = DirectX::XMMatrixTranspose(worldViewProj);
-		cbPerObject->texTransform = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&mWallPiece3->GetTexTransform()));
-		cbPerObject->material = mWallPiece3->GetMaterial();
-		mImmediateContext->Unmap(mConstBufferPerObject, 0);
-
-		// Set Input Assembler Stage
-		mImmediateContext->IASetVertexBuffers(0, 1, mWallPiece3->GetVertexBuffer(), &stride, &offset);
-		mImmediateContext->IASetIndexBuffer(*mWallPiece3->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
-
-		// Set Vertex Shader Stage
-		mImmediateContext->VSSetConstantBuffers(2, 1, &mConstBufferPerObject);
-
-		// Set Pixel Shader Stage	
-		mImmediateContext->PSSetConstantBuffers(2, 1, &mConstBufferPerObject);
-
-		mImmediateContext->DrawIndexed(mWallPiece3->GetIndexCount(), 0, 0);
-	}
-
-	// Draw Mirror to Stencil Buffer
-	{
-		// Do not write to render target.
-		mImmediateContext->OMSetBlendState(mNoRenderTargetWritesBS, blendFactor, 0xffffffff);
-
-		// Render visible mirror pixels to stencil buffer.
-		// Do not write mirror depth to depth buffer at this point, otherwise it will occlude the reflection.
-		mImmediateContext->OMSetDepthStencilState(mMarkMirrorDSS, 1);
-
-		mImmediateContext->IASetVertexBuffers(0, 1, mMirrorObject->GetVertexBuffer(), &stride, &offset);
-		mImmediateContext->IASetIndexBuffer(*mMirrorObject->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
-
-		// Compute object matrices
-		world = XMLoadFloat4x4(&mMirrorObject->GetWorldTransform());
-		worldInvTranspose = MathHelper::InverseTranspose(world);
-		worldViewProj = world*viewProj;
-
-		// Set per object constants
-		mImmediateContext->Map(mConstBufferPerObject, 0, D3D11_MAP_WRITE_DISCARD, 0, &cbPerObjectResource);
-		cbPerObject = (ConstBufferPerObject*)cbPerObjectResource.pData;
-		cbPerObject->world = DirectX::XMMatrixTranspose(world);
-		cbPerObject->worldInvTranpose = DirectX::XMMatrixTranspose(worldInvTranspose);
-		cbPerObject->worldViewProj = DirectX::XMMatrixTranspose(worldViewProj);
-		cbPerObject->texTransform = DirectX::XMMatrixIdentity();
-		cbPerObject->material = mMirrorObject->GetMaterial();
-		mImmediateContext->Unmap(mConstBufferPerObject, 0);
-
-		mImmediateContext->PSSetShaderResources(0, 1, mMirrorObject->GetDiffuseMapSRV());
-
-		mImmediateContext->DrawIndexed(mMirrorObject->GetIndexCount(), 0, 0);
-
-		// Restore states.
-		mImmediateContext->OMSetDepthStencilState(0, 0);
-		mImmediateContext->OMSetBlendState(0, blendFactor, 0xffffffff);
-	}
-
-	// Draw the skull reflection.
-	{
-		// Cache the old light directions, and reflect the light directions.
-		DirectX::XMVECTOR mirrorPlane = DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f); // xy plane
-		DirectX::XMMATRIX R = DirectX::XMMatrixReflect(mirrorPlane);
-
-		world = DirectX::XMLoadFloat4x4(&mSkullObject->GetWorldTransform()) * R;
-		worldInvTranspose = MathHelper::InverseTranspose(world);
-		worldViewProj = world*viewProj;
-
-		DirectX::XMFLOAT3 oldLightDirections[3];
-		for (int i = 0; i < 3; ++i)
-		{
-			oldLightDirections[i] = mDirLights[i].Direction;
-
-			DirectX::XMVECTOR lightDir = XMLoadFloat3(&mDirLights[i].Direction);
-			DirectX::XMVECTOR reflectedLightDir = XMVector3TransformNormal(lightDir, R);
-			XMStoreFloat3(&mDirLights[i].Direction, reflectedLightDir);
-		}
-
-		mImmediateContext->Map(mConstBufferLights, 0, D3D11_MAP_WRITE_DISCARD, 0, &cbLightsResource);
-		cbLights = (ConstBufferLights*)cbLightsResource.pData;
-		cbLights->dirLight0 = mDirLights[0];
-		cbLights->dirLight1 = mDirLights[1];
-		cbLights->dirLight2 = mDirLights[2];
-		mImmediateContext->Unmap(mConstBufferLights, 0);
-
-		// Set per object constants
-		mImmediateContext->Map(mConstBufferPerObject, 0, D3D11_MAP_WRITE_DISCARD, 0, &cbPerObjectResource);
-		cbPerObject = (ConstBufferPerObject*)cbPerObjectResource.pData;
-		cbPerObject->world = DirectX::XMMatrixTranspose(world);
-		cbPerObject->worldInvTranpose = DirectX::XMMatrixTranspose(worldInvTranspose);
-		cbPerObject->worldViewProj = DirectX::XMMatrixTranspose(worldViewProj);
-		cbPerObject->texTransform = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&mSkullObject->GetTexTransform()));
-		cbPerObject->material = mSkullObject->GetMaterial();
-		mImmediateContext->Unmap(mConstBufferPerObject, 0);
-
-		// Set Input Assembler Stage
-		mImmediateContext->IASetVertexBuffers(0, 1, mSkullObject->GetVertexBuffer(), &stride, &offset);
-		mImmediateContext->IASetIndexBuffer(*mSkullObject->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
-		
-		// Cull clockwise triangles for reflection.
-		mImmediateContext->RSSetState(mCullClockwiseRS);
-
-		// Only draw reflection into visible mirror pixels as marked by the stencil buffer. 
-		mImmediateContext->OMSetDepthStencilState(mDrawReflectionDSS, 1);
-		mImmediateContext->DrawIndexed(mSkullObject->GetIndexCount(), 0, 0);
-		
-		// Restore default states.
-		mImmediateContext->RSSetState(0);
-		mImmediateContext->OMSetDepthStencilState(0, 0);
-
-		// Restore light directions.
-		for (int i = 0; i < 3; ++i)
-		{
-			mDirLights[i].Direction = oldLightDirections[i];
-		}
-
-		mImmediateContext->Map(mConstBufferLights, 0, D3D11_MAP_WRITE_DISCARD, 0, &cbLightsResource);
-		cbLights = (ConstBufferLights*)cbLightsResource.pData;
-		cbLights->dirLight0 = mDirLights[0];
-		cbLights->dirLight1 = mDirLights[1];
-		cbLights->dirLight2 = mDirLights[2];
-		mImmediateContext->Unmap(mConstBufferLights, 0);
-	}
-
-	// Draw the mirror to the back buffer as usual but with transparency
-	// blending so the reflection shows through.
-	{
-		mImmediateContext->IASetVertexBuffers(0, 1, mMirrorObject->GetVertexBuffer(), &stride, &offset);
-		mImmediateContext->IASetIndexBuffer(*mMirrorObject->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
-
-		// Compute object matrices
-		world = XMLoadFloat4x4(&mMirrorObject->GetWorldTransform());
-		worldInvTranspose = MathHelper::InverseTranspose(world);
-		worldViewProj = world*viewProj;
-
-		// Set per object constants
-		mImmediateContext->Map(mConstBufferPerObject, 0, D3D11_MAP_WRITE_DISCARD, 0, &cbPerObjectResource);
-		cbPerObject = (ConstBufferPerObject*)cbPerObjectResource.pData;
-		cbPerObject->world = DirectX::XMMatrixTranspose(world);
-		cbPerObject->worldInvTranpose = DirectX::XMMatrixTranspose(worldInvTranspose);
-		cbPerObject->worldViewProj = DirectX::XMMatrixTranspose(worldViewProj);
-		cbPerObject->texTransform = DirectX::XMMatrixIdentity();
-		cbPerObject->material = mMirrorObject->GetMaterial();
-		mImmediateContext->Unmap(mConstBufferPerObject, 0);
-
-		mImmediateContext->PSSetShaderResources(0, 1, mMirrorObject->GetDiffuseMapSRV());
-
-		// Mirror
-		mImmediateContext->OMSetBlendState(mTransparentBS, blendFactor, 0xffffffff);
-		mImmediateContext->DrawIndexed(mMirrorObject->GetIndexCount(), 0, 0);
-	}
-
-	// Draw the skull shadow.
-	{
-		DirectX::XMVECTOR shadowPlane = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f); // xz plane
-		DirectX::XMVECTOR toMainLight = DirectX::XMVectorNegate(DirectX::XMLoadFloat3(&mDirLights[0].Direction));
-		DirectX::XMMATRIX S = DirectX::XMMatrixShadow(shadowPlane, toMainLight);
-		DirectX::XMMATRIX shadowOffsetY = DirectX::XMMatrixTranslation(0.0f, 0.001f, 0.0f);
-
-		world = DirectX::XMLoadFloat4x4(&mSkullObject->GetWorldTransform())*S*shadowOffsetY;
-		worldInvTranspose = MathHelper::InverseTranspose(world);
-		worldViewProj = world*viewProj;
-
-		// Set Input Assembler Stage
-		mImmediateContext->IASetVertexBuffers(0, 1, mSkullObject->GetVertexBuffer(), &stride, &offset);
-		mImmediateContext->IASetIndexBuffer(*mSkullObject->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
-
-		mImmediateContext->Map(mConstBufferPerObject, 0, D3D11_MAP_WRITE_DISCARD, 0, &cbPerObjectResource);
-		cbPerObject = (ConstBufferPerObject*)cbPerObjectResource.pData;
-		cbPerObject->world = DirectX::XMMatrixTranspose(world);
-		cbPerObject->worldInvTranpose = DirectX::XMMatrixTranspose(worldInvTranspose);
-		cbPerObject->worldViewProj = DirectX::XMMatrixTranspose(worldViewProj);
-		cbPerObject->texTransform = DirectX::XMMatrixTranspose(DirectX::XMLoadFloat4x4(&mSkullObject->GetTexTransform()));
-		cbPerObject->material = mShadowMat;
-		mImmediateContext->Unmap(mConstBufferPerObject, 0);
-
-		mImmediateContext->OMSetDepthStencilState(mNoDoubleBlendDSS, 0);
-		mImmediateContext->DrawIndexed(mSkullObject->GetIndexCount(), 0, 0);
-
-		// Restore default states.
-		mImmediateContext->OMSetBlendState(0, blendFactor, 0xffffffff);
-		mImmediateContext->OMSetDepthStencilState(0, 0);
-	}
-	
-	HR(mSwapChain->Present(0, 0));
+	// Draw Object
+	mImmediateContext->DrawIndexed(object->GetIndexCount(), 0, 0);
 }
