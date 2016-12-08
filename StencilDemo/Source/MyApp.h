@@ -118,6 +118,15 @@ private:
 	GPlaneXY* mMirrorObject;
 
 	Material mShadowMat;
+
+	D3D11_MAPPED_SUBRESOURCE cbPerFrameResource;
+	ConstBufferPerFrame* cbPerFrame;
+
+	D3D11_MAPPED_SUBRESOURCE cbPerObjectResource;
+	ConstBufferPerObject* cbPerObject;
+
+	D3D11_MAPPED_SUBRESOURCE cbLightsResource;
+	ConstBufferLights* cbLights;
 };
 
 #endif // MYAPP_H
