@@ -8,8 +8,11 @@
 #include "D3D11.h"
 #include "LightHelper.h"
 #include "Vertex.h"
+#include "DirectXCollision.h"
 #include <string>
 #include <vector>
+
+class GTriangle;
 
 __declspec(align(16))
 class GObject
@@ -51,6 +54,11 @@ public:
 	DirectX::XMFLOAT4X4 GetWorldTransform();
 	DirectX::XMFLOAT4X4 GetTexTransform();
 
+	bool Pick(const DirectX::XMVECTOR& rayOriginV, 
+		      const DirectX::XMVECTOR& rayDirectionV, 
+		      const DirectX::XMMATRIX& invView,
+		      GTriangle* pickedTri);
+
 private:
 	bool ReadObjFile();
 
@@ -59,6 +67,8 @@ protected:
 	ID3D11Buffer* mIndexBuffer;
 
 	ID3D11ShaderResourceView* mDiffuseMapSRV;
+
+	DirectX::BoundingBox mAABB;
 
 	std::vector<Vertex> mVertices;
 	std::vector<UINT> mIndices;

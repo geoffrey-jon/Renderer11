@@ -19,11 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{1CB12F21-7D26-4C7D-AF26-A218E831897E}</ProjectGuid>
+    <ProjectGuid>{F44D0ED5-FB83-4889-B756-01FD769E1BC1}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>DX11Renderer</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
-    <ProjectName>Blending</ProjectName>
+    <ProjectName>PickingDemo</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -186,6 +186,9 @@
     <ClCompile Include="..\Common\Utility\GHill.cpp" />
     <ClCompile Include="..\Common\Utility\GObject.cpp" />
     <ClCompile Include="..\Common\Utility\GPlane.cpp" />
+    <ClCompile Include="..\Common\Utility\GPlaneXY.cpp" />
+    <ClCompile Include="..\Common\Utility\GPlaneXZ.cpp" />
+    <ClCompile Include="..\Common\Utility\GPlaneYZ.cpp" />
     <ClCompile Include="..\Common\Utility\GTriangle.cpp" />
     <ClCompile Include="..\Common\Utility\GWave.cpp" />
     <ClCompile Include="..\Common\Utility\MathHelper.cpp" />
@@ -207,6 +210,9 @@
     <ClInclude Include="..\Common\Utility\GHill.h" />
     <ClInclude Include="..\Common\Utility\GObject.h" />
     <ClInclude Include="..\Common\Utility\GPlane.h" />
+    <ClInclude Include="..\Common\Utility\GPlaneXY.h" />
+    <ClInclude Include="..\Common\Utility\GPlaneXZ.h" />
+    <ClInclude Include="..\Common\Utility\GPlaneYZ.h" />
     <ClInclude Include="..\Common\Utility\GTriangle.h" />
     <ClInclude Include="..\Common\Utility\GWave.h" />
     <ClInclude Include="..\Common\Utility\LightHelper.h" />
@@ -284,6 +290,30 @@
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)PixelShader.cso</ObjectFileOutput>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)PixelShader.cso</ObjectFileOutput>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)PixelShader.cso</ObjectFileOutput>
+    </FxCompile>
+    <FxCompile Include="Shaders\PixelShaderNoTexture.hlsl">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PS</EntryPointName>
+      <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DisableOptimizations>
+      <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</EnableDebuggingInformation>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">5.0</ShaderModel>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">PS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">PS</EntryPointName>
+      <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DisableOptimizations>
+      <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</EnableDebuggingInformation>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)PixelShaderNoTexture.cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)PixelShaderNoTexture.cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)PixelShaderNoTexture.cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)PixelShaderNoTexture.cso</ObjectFileOutput>
     </FxCompile>
     <FxCompile Include="Shaders\VertexShader.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>

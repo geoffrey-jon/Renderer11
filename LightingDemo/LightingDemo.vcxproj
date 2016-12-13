@@ -182,6 +182,7 @@
     <ClCompile Include="..\Common\Utility\GameTimer.cpp" />
     <ClCompile Include="..\Common\Utility\GeometryGenerator.cpp" />
     <ClCompile Include="..\Common\Utility\GObject.cpp" />
+    <ClCompile Include="..\Common\Utility\GTriangle.cpp" />
     <ClCompile Include="..\Common\Utility\MathHelper.cpp" />
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Source\MyApp.cpp" />
@@ -196,6 +197,7 @@
     <ClInclude Include="..\Common\Utility\GameTimer.h" />
     <ClInclude Include="..\Common\Utility\GeometryGenerator.h" />
     <ClInclude Include="..\Common\Utility\GObject.h" />
+    <ClInclude Include="..\Common\Utility\GTriangle.h" />
     <ClInclude Include="..\Common\Utility\LightHelper.h" />
     <ClInclude Include="..\Common\Utility\MathHelper.h" />
     <ClInclude Include="Source\MyApp.h" />

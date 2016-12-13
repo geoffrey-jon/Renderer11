@@ -54,6 +54,9 @@
     <ClCompile Include="..\Common\Utility\GObject.cpp">
       <Filter>Common\Utility</Filter>
     </ClCompile>
+    <ClCompile Include="..\Common\Utility\GTriangle.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\MyApp.h">
@@ -94,6 +97,9 @@
     </ClInclude>
     <ClInclude Include="..\Common\Utility\GObject.h">
       <Filter>Common\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Utility\GTriangle.h">
+      <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

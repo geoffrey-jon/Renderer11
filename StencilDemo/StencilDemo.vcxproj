@@ -189,6 +189,7 @@
     <ClCompile Include="..\Common\Utility\GPlaneXY.cpp" />
     <ClCompile Include="..\Common\Utility\GPlaneXZ.cpp" />
     <ClCompile Include="..\Common\Utility\GPlaneYZ.cpp" />
+    <ClCompile Include="..\Common\Utility\GTriangle.cpp" />
     <ClCompile Include="..\Common\Utility\GWave.cpp" />
     <ClCompile Include="..\Common\Utility\MathHelper.cpp" />
     <ClCompile Include="..\Common\Utility\Waves.cpp" />
@@ -212,6 +213,7 @@
     <ClInclude Include="..\Common\Utility\GPlaneXY.h" />
     <ClInclude Include="..\Common\Utility\GPlaneXZ.h" />
     <ClInclude Include="..\Common\Utility\GPlaneYZ.h" />
+    <ClInclude Include="..\Common\Utility\GTriangle.h" />
     <ClInclude Include="..\Common\Utility\GWave.h" />
     <ClInclude Include="..\Common\Utility\LightHelper.h" />
     <ClInclude Include="..\Common\Utility\MathHelper.h" />

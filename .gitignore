@@ -10,6 +10,8 @@ Blending/Bin/
 Blending/Intermediate/
 StencilDemo/Bin/
 StencilDemo/Intermediate/
+PickingDemo/Bin/
+PickingDemo/Intermediate/
 
 *.sdf
 *.opendb

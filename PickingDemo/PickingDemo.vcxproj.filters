@@ -82,7 +82,7 @@
       <Filter>Common\Utility</Filter>
     </ClCompile>
     <ClCompile Include="..\Common\Utility\GTriangle.cpp">
-      <Filter>Common</Filter>
+      <Filter>Common\Utility</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -153,7 +153,7 @@
       <Filter>Common\Utility</Filter>
     </ClInclude>
     <ClInclude Include="..\Common\Utility\GTriangle.h">
-      <Filter>Common</Filter>
+      <Filter>Common\Utility</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

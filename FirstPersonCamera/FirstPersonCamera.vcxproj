@@ -185,6 +185,7 @@
     <ClCompile Include="..\Common\Utility\GFirstPersonCamera.cpp" />
     <ClCompile Include="..\Common\Utility\GObject.cpp" />
     <ClCompile Include="..\Common\Utility\GPlane.cpp" />
+    <ClCompile Include="..\Common\Utility\GTriangle.cpp" />
     <ClCompile Include="..\Common\Utility\MathHelper.cpp" />
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Source\MyApp.cpp" />
@@ -202,6 +203,7 @@
     <ClInclude Include="..\Common\Utility\GFirstPersonCamera.h" />
     <ClInclude Include="..\Common\Utility\GObject.h" />
     <ClInclude Include="..\Common\Utility\GPlane.h" />
+    <ClInclude Include="..\Common\Utility\GTriangle.h" />
     <ClInclude Include="..\Common\Utility\LightHelper.h" />
     <ClInclude Include="..\Common\Utility\MathHelper.h" />
     <ClInclude Include="Source\MyApp.h" />

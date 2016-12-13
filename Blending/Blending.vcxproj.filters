@@ -72,6 +72,9 @@
     <ClCompile Include="..\Common\Utility\GWave.cpp">
       <Filter>Common\Utility</Filter>
     </ClCompile>
+    <ClCompile Include="..\Common\Utility\GTriangle.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\MyApp.h">
@@ -130,6 +133,9 @@
     </ClInclude>
     <ClInclude Include="..\Common\Utility\GWave.h">
       <Filter>Common\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Utility\GTriangle.h">
+      <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
