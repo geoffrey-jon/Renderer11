@@ -10,7 +10,8 @@
 #include "GObject.h"
 #include "GTriangle.h"
 #include "GFirstPersonCamera.h"
-
+#include "RenderStates.h"
+	
 struct ConstBufferPerObject
 {
 	DirectX::XMMATRIX world;
@@ -19,7 +20,7 @@ struct ConstBufferPerObject
 	DirectX::XMMATRIX texTransform;
 	Material material;
 };
-
+	
 struct ConstBufferPerFrame
 {
 	DirectionalLight dirLight0;
@@ -46,14 +47,8 @@ public:
 	void OnMouseMove(WPARAM btnState, int x, int y);
 
 private:
-	void InitRasterizerStates();
-	void InitSamplerStates();
-	void InitBlendStates();
-	void InitDepthStencilStates();
-
 	void CreateGeometryBuffers(GObject* obj, bool dynamic = false);
-	void CreateIndexedGeometryBuffers(GObject* obj, bool dynamic = false);
-
+		
 	void CreateConstantBuffer(ID3D11Buffer** buffer, UINT size);
 	void CreateVertexShader(ID3D11VertexShader** shader, LPCWSTR filename, LPCSTR entryPoint);
 	void CreatePixelShader(ID3D11PixelShader** shader, LPCWSTR filename, LPCSTR entryPoint);
@@ -65,9 +60,9 @@ private:
 	void SetupStaticLights();
 
 	void DrawObject(GObject* object);
-	void DrawObjectIndexed(GObject* object);
-	void DrawObjectTransform(GObject* object, DirectX::XMMATRIX& tranform);
-	void DrawObjectShadow(GObject* object, DirectX::XMMATRIX& tranform);
+	void DrawObject(GObject* object, DirectX::XMMATRIX& transform);
+	void DrawShadow(GObject* object, DirectX::XMMATRIX& transform);
+	void Draw(GObject* object, DirectX::XMMATRIX& world, bool bShadow);
 
 	void Pick(int sx, int sy);
 
@@ -76,15 +71,22 @@ private:
 	ID3D11Buffer* mConstBufferPerFrame;
 	ID3D11Buffer* mConstBufferPerObject;
 
-	// State Objects
-	ID3D11DepthStencilState* mLessEqualDSS;
+	D3D11_MAPPED_SUBRESOURCE cbPerFrameResource;
+	D3D11_MAPPED_SUBRESOURCE cbPerObjectResource;
+
+	ConstBufferPerFrame* cbPerFrame;
+	ConstBufferPerObject* cbPerObject;
 
 	// Shaders
 	ID3D11VertexShader* mVertexShader;
-	ID3D11PixelShader* mPixelShader;
 	ID3D11PixelShader* mPixelShaderNoTexture;
 
+	// Vertex Layout
 	ID3D11InputLayout* mVertexLayout;
+
+	// Objects
+	GObject* mCarObject;
+	GTriangle* mPickedTriangle;
 
 	// Lights
 	DirectionalLight mDirLights[3];
@@ -94,18 +96,7 @@ private:
 
 	// User Input
 	POINT mLastMousePos;
-
-	// Objects
-	GObject* mCarObject;
-	GTriangle* mPickedTriangle;
-
 	bool bPicked;
-
-	D3D11_MAPPED_SUBRESOURCE cbPerFrameResource;
-	ConstBufferPerFrame* cbPerFrame;
-
-	D3D11_MAPPED_SUBRESOURCE cbPerObjectResource;
-	ConstBufferPerObject* cbPerObject;
 };
 
 #endif // MYAPP_H

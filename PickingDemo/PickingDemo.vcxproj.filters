@@ -84,6 +84,9 @@
     <ClCompile Include="..\Common\Utility\GTriangle.cpp">
       <Filter>Common\Utility</Filter>
     </ClCompile>
+    <ClCompile Include="Source\RenderStates.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\MyApp.h">
@@ -154,6 +157,9 @@
     </ClInclude>
     <ClInclude Include="..\Common\Utility\GTriangle.h">
       <Filter>Common\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderStates.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

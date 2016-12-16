@@ -195,6 +195,7 @@
     <ClCompile Include="..\Common\Utility\Waves.cpp" />
     <ClCompile Include="Source\Main.cpp" />
     <ClCompile Include="Source\MyApp.cpp" />
+    <ClCompile Include="Source\RenderStates.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\ThirdParty\D3DX11Effect.h" />
@@ -219,6 +220,7 @@
     <ClInclude Include="..\Common\Utility\MathHelper.h" />
     <ClInclude Include="..\Common\Utility\Waves.h" />
     <ClInclude Include="Source\MyApp.h" />
+    <ClInclude Include="Source\RenderStates.h" />
     <ClInclude Include="Source\Vertex.h" />
   </ItemGroup>
   <ItemGroup>

@@ -19,7 +19,7 @@ class GObject
 {
 public:
 	GObject();
-	GObject(std::string filename);
+	GObject(std::string filename, bool bIndexed = true);
 	~GObject();
 
 	void* operator new(size_t i) { return _mm_malloc(i,16);	}
@@ -33,6 +33,13 @@ public:
 	void SetDiffuse(DirectX::XMFLOAT4 diffuse);
 	void SetSpecular(DirectX::XMFLOAT4 specular);
 	void SetReflect(DirectX::XMFLOAT4 reflect);
+
+	inline Material GetShadowMaterial() { return mShadowMaterial; }
+	void SetShadowMaterial(Material mat);
+	void SetAmbientShadow(DirectX::XMFLOAT4 ambient);
+	void SetDiffuseShadow(DirectX::XMFLOAT4 diffuse);
+	void SetSpecularShadow(DirectX::XMFLOAT4 specular);
+	void SetReflectShadow(DirectX::XMFLOAT4 reflect);
 
 	void SetTexture(LPCWSTR filename);
 	void SetTextureScaling(float x, float y);
@@ -59,6 +66,9 @@ public:
 		      const DirectX::XMMATRIX& invView,
 		      GTriangle* pickedTri);
 
+	inline bool IsIndexed() { return isIndexed; }
+	inline void SetIndexed(bool bIndexed) { isIndexed = bIndexed; }
+
 private:
 	bool ReadObjFile();
 
@@ -76,6 +86,7 @@ protected:
 	std::string mFilename;
 
 	Material mMaterial;
+	Material mShadowMaterial;
 
 	DirectX::XMFLOAT4X4 mWorldTransform;
 	DirectX::XMFLOAT4X4 mTexTransform;
@@ -86,6 +97,8 @@ protected:
 
 	UINT mIndexCount;
 	UINT mVertexCount;
+
+	bool isIndexed;
 };
 
 #endif // GOBJECT_H

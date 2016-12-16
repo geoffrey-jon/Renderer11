@@ -11,9 +11,10 @@ GObject::GObject()
 	Init();
 }
 
-GObject::GObject(std::string filename)
+GObject::GObject(std::string filename, bool bIndexed)
 { 
 	mFilename = filename;
+	isIndexed = bIndexed;
 	ReadObjFile();
 	Init();
 }
@@ -111,6 +112,34 @@ void GObject::SetSpecular(DirectX::XMFLOAT4 specular)
 void GObject::SetReflect(DirectX::XMFLOAT4 reflect)
 {
 	mMaterial.Reflect = reflect;
+}
+
+void GObject::SetShadowMaterial(Material mat)
+{
+	mShadowMaterial.Ambient = mat.Ambient;
+	mShadowMaterial.Diffuse = mat.Diffuse;
+	mShadowMaterial.Specular = mat.Specular;
+	mShadowMaterial.Reflect = mat.Reflect;
+}
+
+void GObject::SetAmbientShadow(DirectX::XMFLOAT4 ambient)
+{
+	mShadowMaterial.Ambient = ambient;
+}
+
+void GObject::SetDiffuseShadow(DirectX::XMFLOAT4 diffuse)
+{
+	mShadowMaterial.Diffuse = diffuse;
+}
+
+void GObject::SetSpecularShadow(DirectX::XMFLOAT4 specular)
+{
+	mShadowMaterial.Specular = specular;
+}
+
+void GObject::SetReflectShadow(DirectX::XMFLOAT4 reflect)
+{
+	mShadowMaterial.Reflect = reflect;
 }
 
 void GObject::Translate(float x, float y, float z)
