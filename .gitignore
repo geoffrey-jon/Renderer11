@@ -12,6 +12,10 @@ StencilDemo/Bin/
 StencilDemo/Intermediate/
 PickingDemo/Bin/
 PickingDemo/Intermediate/
+CubeMapDemo/Bin/
+CubeMapDemo/Intermediate/
+DynamicCubeMapDemo/Bin/
+DynamicCubeMapDemo/Intermediate/
 
 *.sdf
 *.opendb
