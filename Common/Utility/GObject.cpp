@@ -34,6 +34,7 @@ bool GObject::Init()
 	mTranslation = DirectX::XMMatrixIdentity();
 	mRotation = DirectX::XMMatrixIdentity();
 	mScale = DirectX::XMMatrixIdentity();
+	DirectX::XMStoreFloat4x4(&mWorldTransform, DirectX::XMMatrixIdentity());
 	DirectX::XMStoreFloat4x4(&mTexTransform, DirectX::XMMatrixIdentity());
 	return true;
 }
@@ -145,6 +146,7 @@ void GObject::SetReflectShadow(DirectX::XMFLOAT4 reflect)
 void GObject::Translate(float x, float y, float z)
 {
 	mTranslation = DirectX::XMMatrixTranslation(x, y, z);
+	UpdateWorldTransform();
 }
 
 void GObject::Rotate(float x, float y, float z)
@@ -153,18 +155,24 @@ void GObject::Rotate(float x, float y, float z)
 		DirectX::XMConvertToRadians(x),
 		DirectX::XMConvertToRadians(y), 
 		DirectX::XMConvertToRadians(z));
+	UpdateWorldTransform();
 }
 
 void GObject::Scale(float x, float y, float z)
 {
 	mScale = DirectX::XMMatrixScaling(x, y, z);
+	UpdateWorldTransform();
 }
 
 DirectX::XMFLOAT4X4 GObject::GetWorldTransform() 
 {
+	return mWorldTransform;
+}
+
+void GObject::UpdateWorldTransform()
+{
 	DirectX::XMMATRIX SR = XMMatrixMultiply(mScale, mRotation);
 	XMStoreFloat4x4(&mWorldTransform, XMMatrixMultiply(SR, mTranslation));
-	return mWorldTransform;
 }
 
 DirectX::XMFLOAT4X4 GObject::GetTexTransform()

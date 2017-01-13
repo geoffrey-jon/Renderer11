@@ -71,6 +71,7 @@ public:
 
 private:
 	bool ReadObjFile();
+	void UpdateWorldTransform();
 
 protected:
 	ID3D11Buffer* mVertexBuffer;

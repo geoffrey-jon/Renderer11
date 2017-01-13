@@ -17,6 +17,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StencilDemo", "StencilDemo\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PickingDemo", "PickingDemo\PickingDemo.vcxproj", "{F44D0ED5-FB83-4889-B756-01FD769E1BC1}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CubeMapDemo", "CubeMapDemo\CubeMapDemo.vcxproj", "{A5DE2001-FDF2-4675-9FCF-A457E42F2FAD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -81,6 +83,14 @@ Global
 		{F44D0ED5-FB83-4889-B756-01FD769E1BC1}.Release|x64.Build.0 = Release|x64
 		{F44D0ED5-FB83-4889-B756-01FD769E1BC1}.Release|x86.ActiveCfg = Release|Win32
 		{F44D0ED5-FB83-4889-B756-01FD769E1BC1}.Release|x86.Build.0 = Release|Win32
+		{A5DE2001-FDF2-4675-9FCF-A457E42F2FAD}.Debug|x64.ActiveCfg = Debug|x64
+		{A5DE2001-FDF2-4675-9FCF-A457E42F2FAD}.Debug|x64.Build.0 = Debug|x64
+		{A5DE2001-FDF2-4675-9FCF-A457E42F2FAD}.Debug|x86.ActiveCfg = Debug|Win32
+		{A5DE2001-FDF2-4675-9FCF-A457E42F2FAD}.Debug|x86.Build.0 = Debug|Win32
+		{A5DE2001-FDF2-4675-9FCF-A457E42F2FAD}.Release|x64.ActiveCfg = Release|x64
+		{A5DE2001-FDF2-4675-9FCF-A457E42F2FAD}.Release|x64.Build.0 = Release|x64
+		{A5DE2001-FDF2-4675-9FCF-A457E42F2FAD}.Release|x86.ActiveCfg = Release|Win32
+		{A5DE2001-FDF2-4675-9FCF-A457E42F2FAD}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

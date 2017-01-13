@@ -6,10 +6,15 @@
 
 GPlaneXZ::GPlaneXZ() : GObject()
 {
-	GPlaneXZ(10.0f, 10.0f, 10, 10);
+	CreatePlane(10.0f, 10.0f, 10, 10);
 }
 
 GPlaneXZ::GPlaneXZ(float width, float depth, UINT m, UINT n) : GObject()
+{
+	CreatePlane(width, depth, m, n);
+}
+
+void GPlaneXZ::CreatePlane(float width, float depth, UINT m, UINT n)
 {
 	UINT faceCount = (m - 1) * (n - 1) * 2;
 	mIndexCount = faceCount * 3;
