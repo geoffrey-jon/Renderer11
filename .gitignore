@@ -16,6 +16,8 @@ CubeMapDemo/Bin/
 CubeMapDemo/Intermediate/
 DynamicCubeMapDemo/Bin/
 DynamicCubeMapDemo/Intermediate/
+NormalMapDemo/Bin/
+NormalMapDemo/Intermediate/
 
 *.sdf
 *.opendb

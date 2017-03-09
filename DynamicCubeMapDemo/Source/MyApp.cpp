@@ -24,7 +24,7 @@ MyApp::MyApp(HINSTANCE Instance) :
 	mDynamicCubeMapDSV(0), 
 	mDynamicCubeMapSRV(0)
 {
-	mWindowTitle = L"Dynamic Cube Map Demo";
+	mWindowTitle = L"sdfgsdfg Cube Map Demo";
 }
 
 MyApp::~MyApp()
@@ -683,6 +683,9 @@ void MyApp::DrawScene(const GFirstPersonCamera& camera, bool drawCenterSphere)
 		mImmediateContext->PSSetShaderResources(1, 1, &mDynamicCubeMapSRV);
 
 		DrawObject(mSphereObject, &camera);
+
+		ID3D11ShaderResourceView* nullSRVs[1] = { NULL };
+		mImmediateContext->PSSetShaderResources(1, 1, nullSRVs);
 	}
 
 	// Draw Sky
