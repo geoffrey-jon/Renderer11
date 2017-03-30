@@ -24,6 +24,7 @@ GObject::~GObject()
 	ReleaseCOM(mVertexBuffer);
 	ReleaseCOM(mIndexBuffer);
 	ReleaseCOM(mDiffuseMapSRV);
+	ReleaseCOM(mNormalMapSRV);
 }
 
 bool GObject::Init()
@@ -31,6 +32,7 @@ bool GObject::Init()
 	mVertexBuffer = nullptr; 
 	mIndexBuffer = nullptr;
 	mDiffuseMapSRV = nullptr;
+	mNormalMapSRV = nullptr;
 	mTranslation = DirectX::XMMatrixIdentity();
 	mRotation = DirectX::XMMatrixIdentity();
 	mScale = DirectX::XMMatrixIdentity();

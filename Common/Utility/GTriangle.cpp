@@ -12,12 +12,15 @@ GTriangle::GTriangle() : GObject()
 	Vertex v0, v1, v2;
 	v0.Pos = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	v0.Normal = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	v0.Tex = DirectX::XMFLOAT2(0.0f, 0.0f);
 
 	v1.Pos = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	v1.Normal = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	v1.Tex = DirectX::XMFLOAT2(0.0f, 0.0f);
 
 	v2.Pos = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	v2.Normal = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	v2.Tex = DirectX::XMFLOAT2(0.0f, 0.0f);
 
 	mVertexCount = 3;
 	mVertices.resize(3);

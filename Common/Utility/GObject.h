@@ -57,6 +57,7 @@ public:
 	inline ID3D11Buffer** GetIndexBuffer() { return &mIndexBuffer; }
 	inline ID3D11Buffer** GetVertexBuffer() { return &mVertexBuffer; }
 	inline ID3D11ShaderResourceView** GetDiffuseMapSRV() { return &mDiffuseMapSRV; }
+	inline ID3D11ShaderResourceView** GetNormalMapSRV() { return &mNormalMapSRV; }
 
 	DirectX::XMFLOAT4X4 GetWorldTransform();
 	DirectX::XMFLOAT4X4 GetTexTransform();
@@ -78,6 +79,7 @@ protected:
 	ID3D11Buffer* mIndexBuffer;
 
 	ID3D11ShaderResourceView* mDiffuseMapSRV;
+	ID3D11ShaderResourceView* mNormalMapSRV;
 
 	DirectX::BoundingBox mAABB;
 
