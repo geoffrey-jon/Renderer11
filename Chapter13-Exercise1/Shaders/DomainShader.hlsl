@@ -19,8 +19,8 @@ cbuffer cbPerObject : register(b1)
 
 struct PatchTess
 {
-	float EdgeTess[4]   : SV_TessFactor;
-	float InsideTess[2] : SV_InsideTessFactor;
+	float EdgeTess[3]   : SV_TessFactor;
+	float InsideTess[1] : SV_InsideTessFactor;
 };
 
 struct DomainOut
@@ -35,17 +35,18 @@ struct HullOut
 
 // The domain shader is called for every vertex created by the tessellator.  
 // It is like the vertex shader after tessellation.
-[domain("quad")]
+[domain("tri")]
 DomainOut DS(PatchTess patchTess,
-	float2 uv : SV_DomainLocation,
-	const OutputPatch<HullOut, 4> quad)
+	float3 uvw : SV_DomainLocation,
+	const OutputPatch<HullOut, 3> tri)
 {
 	DomainOut dout;
 
 	// Bilinear interpolation.
-	float3 v1 = lerp(quad[0].PosL, quad[1].PosL, uv.x);
-	float3 v2 = lerp(quad[2].PosL, quad[3].PosL, uv.x);
-	float3 p = lerp(v1, v2, uv.y);
+//	float3 v1 = lerp(quad[0].PosL, quad[1].PosL, uv.x);
+//	float3 v2 = lerp(quad[2].PosL, quad[3].PosL, uv.x);
+//	float3 p = lerp(v1, v2, uv.y);
+	float3 p = (uvw.x*tri[0].PosL) + (uvw.y*tri[1].PosL) + (uvw.z*tri[2].PosL);
 
 	// Displacement mapping
 	p.y = 0.1f*(p.z*sin(p.x) + p.x*cos(p.z));
