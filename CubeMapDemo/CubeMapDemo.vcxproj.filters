@@ -191,4 +191,7 @@
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\NormalMapDemo\NormalMapDemo.vcxproj" />
+  </ItemGroup>
 </Project>

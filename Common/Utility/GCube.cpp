@@ -8,7 +8,7 @@ GCube::GCube() : GObject()
 { 
 	GeometryGenerator geoGen;
 	GeometryGenerator::MeshData cube;
-	geoGen.CreateBox(1.0f, 1.0f, 1.0f, cube);
+	geoGen.CreateBox3(1.0f, 1.0f, 1.0f, cube);
 
 	mVertexCount = cube.Vertices.size();
 	mIndexCount = cube.Indices.size();
@@ -19,6 +19,7 @@ GCube::GCube() : GObject()
 		mVertices[i].Pos = cube.Vertices[i].Position;
 		mVertices[i].Normal = cube.Vertices[i].Normal;
 		mVertices[i].Tex = cube.Vertices[i].TexC;
+		mVertices[i].TangentU = cube.Vertices[i].TangentU;
 	}
 
 	mIndices.resize(mIndexCount);

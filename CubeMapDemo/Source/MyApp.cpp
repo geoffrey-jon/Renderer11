@@ -211,7 +211,7 @@ void MyApp::PositionObjects()
 	mSkullObject->SetReflect(DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f));
 
 	LoadTextureToSRV(mFloorObject->GetDiffuseMapSRV(), L"Textures/floor.dds");
-	LoadTextureToSRV(mBoxObject->GetDiffuseMapSRV(), L"Textures/stone.dds");
+	LoadTextureToSRV(mBoxObject->GetDiffuseMapSRV(), L"Textures/bricks.dds");
 	LoadTextureToSRV(mSphereObject->GetDiffuseMapSRV(), L"Textures/stone.dds");
 	LoadTextureToSRV(mSkyObject->GetDiffuseMapSRV(), L"Textures/grasscube1024.dds");
 }
