@@ -18,6 +18,13 @@ DynamicCubeMapDemo/Bin/
 DynamicCubeMapDemo/Intermediate/
 NormalMapDemo/Bin/
 NormalMapDemo/Intermediate/
+DisplacementMapDemo/Bin/
+DisplacementMapDemo/Intermediate/
+ShadowMapDemo/Bin/
+ShadowMapDemo/Intermediate/
+AmbientOcclusionDemo/Bin/
+AmbientOcclusionDemo/Intermediate/
+
 
 *.sdf
 *.opendb

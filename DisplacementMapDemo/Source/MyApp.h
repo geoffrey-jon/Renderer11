@@ -109,6 +109,8 @@ private:
 	ID3D11DomainShader* mDomainShader;
 	ID3D11PixelShader* mPixelShader;
 
+	ID3D11PixelShader* mPixelShaderCube;
+
 	ID3D11VertexShader* mSkyVertexShader;
 	ID3D11PixelShader* mSkyPixelShader;
 

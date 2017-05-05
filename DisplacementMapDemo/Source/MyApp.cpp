@@ -93,6 +93,7 @@ bool MyApp::Init()
 	CreateHullShader(&mHullShader, L"Shaders/HullShader.hlsl", "HS");
 	CreateDomainShader(&mDomainShader, L"Shaders/DomainShader.hlsl", "DS");
 	CreatePixelShader(&mPixelShader, L"Shaders/PixelShader.hlsl", "PS");
+	CreatePixelShader(&mPixelShaderCube, L"Shaders/PixelShaderCube.hlsl", "PS");
 
 //	CreateVertexShader(&mSkyVertexShader, L"Shaders/SkyVertexShader.hlsl", "VS");
 //	CreatePixelShader(&mSkyPixelShader, L"Shaders/SkyPixelShader.hlsl", "PS");
@@ -102,7 +103,7 @@ bool MyApp::Init()
 	CreateConstantBuffer(&mConstBufferPerObject, sizeof(ConstBufferPerObject));
 	CreateConstantBuffer(&mConstBufferPSParams, sizeof(ConstBufferPSParams));
 
-	mNormalSetting = true;
+	mNormalSetting = false;
 
 	return true;
 }
@@ -221,7 +222,7 @@ void MyApp::PositionObjects()
 	mSkullObject->SetReflect(DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f));
 
 	LoadTextureToSRV(mFloorObject->GetDiffuseMapSRV(), L"Textures/floor.dds");
-	LoadTextureToSRV(mBoxObject->GetDiffuseMapSRV(), L"Textures/bricks.dds");
+	LoadTextureToSRV(mBoxObject->GetDiffuseMapSRV(), L"Textures/grasscube1024.dds");
 
 	LoadTextureToSRV(mSkyObject->GetDiffuseMapSRV(), L"Textures/grasscube1024.dds");
 
@@ -536,6 +537,9 @@ void MyApp::DrawScene()
 	mImmediateContext->Unmap(mConstBufferPSParams, 0);
 
 	DrawObject(mFloorObject);
+
+	mImmediateContext->PSSetShader(mPixelShaderCube, NULL, 0);
+
 	DrawObject(mBoxObject);
 /*
 	// Set PS Parameters

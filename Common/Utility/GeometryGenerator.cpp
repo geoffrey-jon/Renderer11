@@ -100,15 +100,17 @@ void GeometryGenerator::CreateBox2(float width, float height, float depth, MeshD
 	float h2 = 0.5f*height;
 	float d2 = 0.5f*depth;
 
-	v[0] = Vertex(+w2, +h2, -d2,  0.333f,  0.667f, -0.667f,  1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-	v[1] = Vertex(-w2, +h2, -d2, -0.816f,  0.408f, -0.408f,  1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
-	v[2] = Vertex(-w2, +h2, +d2, -0.333f,  0.667f,  0.667f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
-	v[3] = Vertex(+w2, +h2, +d2,  0.816f,  0.408f,  0.408f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f);
+	// Fill in the front face vertex data.
+	v[0] = Vertex(-w2, -h2, -d2, -0.577f, -0.577f, -0.577f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	v[1] = Vertex(-w2, +h2, -d2, -0.577f, 0.577f, -0.577f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+	v[2] = Vertex(+w2, +h2, -d2, 0.577f, 0.577f, -0.577f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+	v[3] = Vertex(+w2, -h2, -d2, 0.577f, -0.577f, -0.577f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f);
 
-	v[4] = Vertex(+w2, -h2, -d2,  0.667f, -0.667f, -0.333f,  1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
-	v[5] = Vertex(-w2, -h2, -d2, -0.408f, -0.408f, -0.816f,  1.0f, 0.0f, 0.0f, 1.0f, 1.0f);
-	v[6] = Vertex(-w2, -h2, +d2, -0.667f, -0.667f,  0.333f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-	v[7] = Vertex(+w2, -h2, +d2,  0.408f, -0.408f,  0.816f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+	// Fill in the back face vertex data.
+	v[4] = Vertex(-w2, -h2, +d2, -0.577f, -0.577f, 0.577f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f);
+	v[5] = Vertex(+w2, -h2, +d2, 0.577f, -0.577f, 0.577f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	v[6] = Vertex(+w2, +h2, +d2, 0.577f, 0.577f, 0.577f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+	v[7] = Vertex(-w2, +h2, +d2, -0.577f, 0.577f, 0.577f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
 
 	meshData.Vertices.assign(&v[0], &v[8]);
 
@@ -123,24 +125,24 @@ void GeometryGenerator::CreateBox2(float width, float height, float depth, MeshD
 	i[3] = 0; i[4] = 2; i[5] = 3;
 
 	// Fill in the back face index data
-	i[6] = 0; i[7] = 4; i[8] = 5;
-	i[9] = 0; i[10] = 5; i[11] = 1;
+	i[6] = 4; i[7] = 5; i[8] = 6;
+	i[9] = 4; i[10] = 6; i[11] = 7;
 
 	// Fill in the top face index data
-	i[12] = 1; i[13] = 5; i[14] = 6;
+	i[12] = 1; i[13] = 7; i[14] = 6;
 	i[15] = 1; i[16] = 6; i[17] = 2;
 
 	// Fill in the bottom face index data
-	i[18] = 2; i[19] = 6; i[20] = 7;
-	i[21] = 2; i[22] = 7; i[23] = 3;
+	i[18] = 0; i[19] = 3; i[20] = 5;
+	i[21] = 0; i[22] = 5; i[23] = 4;
 
 	// Fill in the left face index data
-	i[24] = 3; i[25] = 7; i[26] = 4;
-	i[27] = 3; i[28] = 4; i[29] = 0;
+	i[24] = 4; i[25] = 7; i[26] = 1;
+	i[27] = 4; i[28] = 1; i[29] = 0;
 
 	// Fill in the right face index data
-	i[30] = 4; i[31] = 7; i[32] = 6;
-	i[33] = 4; i[34] = 6; i[35] = 5;
+	i[30] = 3; i[31] = 2; i[32] = 6;
+	i[33] = 3; i[34] = 6; i[35] = 5;
 
 	meshData.Indices.assign(&i[0], &i[36]);
 }

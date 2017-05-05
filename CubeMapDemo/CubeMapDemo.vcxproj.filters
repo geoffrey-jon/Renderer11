@@ -184,10 +184,10 @@
     <FxCompile Include="Shaders\LightHelper.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\SkyPixelShader.hlsl">
+    <FxCompile Include="Shaders\SkyVertexShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\SkyVertexShader.hlsl">
+    <FxCompile Include="Shaders\SkyPixelShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
