@@ -25,6 +25,7 @@ public:
 	static ID3D11SamplerState* ShadowMapCompSS;
 	static ID3D11SamplerState* ShadowMapSS;
 	static ID3D11SamplerState* SsaoSS;
+	static ID3D11SamplerState* BlurSS;
 };
 
 #endif // RENDERSTATES_H

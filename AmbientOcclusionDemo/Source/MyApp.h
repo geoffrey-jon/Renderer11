@@ -51,6 +51,13 @@ struct ConstBufferPSParams
 	DirectX::XMINT2 pad;
 };
 
+struct ConstBufferBlurParams
+{
+	float texelWidth;
+	float texelHeight;
+	DirectX::XMFLOAT2 pad;
+};
+
 struct ConstBufferPerObjectNormalDepth
 {
 	DirectX::XMMATRIX worldView;
@@ -107,6 +114,7 @@ private:
 
 	void RenderNormalDepthMap();
 	void RenderSSAOMap();
+	void BlurSSAOMap(int numBlurs);
 	
 	void SetupNormalDepth();
 	void SetupSSAO();
@@ -120,20 +128,26 @@ private:
 	ID3D11Buffer* mConstBufferPerFrame;
 	ID3D11Buffer* mConstBufferPerObject;
 	ID3D11Buffer* mConstBufferPSParams;
+
 	ID3D11Buffer* mConstBufferPerObjectND;
 	ID3D11Buffer* mConstBufferPerFrameSSAO;
+	ID3D11Buffer* mConstBufferBlurParams;
 
 	D3D11_MAPPED_SUBRESOURCE cbPerFrameResource;
 	D3D11_MAPPED_SUBRESOURCE cbPerObjectResource;
 	D3D11_MAPPED_SUBRESOURCE cbPSParamsResource;
+
 	D3D11_MAPPED_SUBRESOURCE cbPerObjectNDResource;
 	D3D11_MAPPED_SUBRESOURCE cbPerFrameSSAOResource;
+	D3D11_MAPPED_SUBRESOURCE cbBlurParamsResource;
 
 	ConstBufferPerFrame* cbPerFrame;
 	ConstBufferPerObject* cbPerObject;
 	ConstBufferPSParams* cbPSParams;
+	
 	ConstBufferPerObjectNormalDepth* cbPerObjectND;
 	ConstBufferPerFrameSSAO* cbPerFrameSSAO;
+	ConstBufferBlurParams* cbBlurParams;
 
 	// Shaders
 	ID3D11VertexShader* mVertexShader;
@@ -147,6 +161,9 @@ private:
 
 	ID3D11VertexShader* mSsaoVS;
 	ID3D11PixelShader* mSsaoPS;
+
+	ID3D11VertexShader* mBlurVS;
+	ID3D11PixelShader* mBlurPS;
 
 	// Vertex Layout
 	ID3D11InputLayout* mVertexLayout;
@@ -174,8 +191,11 @@ private:
 	ID3D11RenderTargetView* mNormalDepthRTV;
 	ID3D11ShaderResourceView* mNormalDepthSRV;
 
-	ID3D11RenderTargetView* mSsaoRTV;
-	ID3D11ShaderResourceView* mSsaoSRV;
+	ID3D11RenderTargetView* mSsaoRTV0;
+	ID3D11RenderTargetView* mSsaoRTV1;
+
+	ID3D11ShaderResourceView* mSsaoSRV0;
+	ID3D11ShaderResourceView* mSsaoSRV1;
 
 	DirectX::XMFLOAT4 mFrustumFarCorners[4];
 	DirectX::XMFLOAT4 mOffsets[14];

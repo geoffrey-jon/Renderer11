@@ -15,6 +15,7 @@ ID3D11RasterizerState* RenderStates::ShadowMapRS = 0;
 ID3D11SamplerState* RenderStates::ShadowMapCompSS = 0;
 ID3D11SamplerState* RenderStates::ShadowMapSS = 0;
 ID3D11SamplerState* RenderStates::SsaoSS = 0;
+ID3D11SamplerState* RenderStates::BlurSS = 0;
 
 ID3D11DepthStencilState* RenderStates::LessEqualDSS = 0;
 
@@ -169,6 +170,25 @@ void RenderStates::InitAll(ID3D11Device* device)
 	SsaoSSDesc.MaxLOD = FLT_MAX;
 
 	HR(device->CreateSamplerState(&SsaoSSDesc, &SsaoSS));
+
+	// Blur Sampler State
+	D3D11_SAMPLER_DESC BlurSSDesc;
+	BlurSSDesc.Filter = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+	BlurSSDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	BlurSSDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	BlurSSDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	BlurSSDesc.MipLODBias = 0.0f;
+	BlurSSDesc.MaxAnisotropy = 1;
+	BlurSSDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	BlurSSDesc.BorderColor[0] = 0.0f;
+	BlurSSDesc.BorderColor[1] = 0.0f;
+	BlurSSDesc.BorderColor[2] = 0.0f;
+	BlurSSDesc.BorderColor[3] = 1e5f;
+	BlurSSDesc.MinLOD = -FLT_MAX;
+	BlurSSDesc.MaxLOD = FLT_MAX;
+
+	HR(device->CreateSamplerState(&BlurSSDesc, &BlurSS));
+
 
 	// LessEqualDSS
 	D3D11_DEPTH_STENCIL_DESC lessEqualDesc;
