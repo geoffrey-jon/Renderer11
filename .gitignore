@@ -24,7 +24,8 @@ ShadowMapDemo/Bin/
 ShadowMapDemo/Intermediate/
 AmbientOcclusionDemo/Bin/
 AmbientOcclusionDemo/Intermediate/
-
+ParticleSystem/Bin/
+ParticleSystem/Intermediate/
 
 *.sdf
 *.opendb
