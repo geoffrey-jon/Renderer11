@@ -16,9 +16,9 @@
 #include "GPlaneXZ.h"
 #include "GSky.h"
 
-struct ConstBufferPerObjectShadow
+struct ConstBufferPerObjectDebug
 {
-	DirectX::XMMATRIX worldViewProj;
+	DirectX::XMMATRIX world;
 };
 
 struct ConstBufferPerObject
@@ -115,7 +115,8 @@ private:
 	void RenderNormalDepthMap();
 	void RenderSSAOMap();
 	void BlurSSAOMap(int numBlurs);
-	
+	void DrawSSAOMap();
+
 	void SetupNormalDepth();
 	void SetupSSAO();
 	void BuildFrustumCorners();
@@ -132,6 +133,7 @@ private:
 	ID3D11Buffer* mConstBufferPerObjectND;
 	ID3D11Buffer* mConstBufferPerFrameSSAO;
 	ID3D11Buffer* mConstBufferBlurParams;
+	ID3D11Buffer* mConstBufferPerObjectDebug;
 
 	D3D11_MAPPED_SUBRESOURCE cbPerFrameResource;
 	D3D11_MAPPED_SUBRESOURCE cbPerObjectResource;
@@ -140,6 +142,7 @@ private:
 	D3D11_MAPPED_SUBRESOURCE cbPerObjectNDResource;
 	D3D11_MAPPED_SUBRESOURCE cbPerFrameSSAOResource;
 	D3D11_MAPPED_SUBRESOURCE cbBlurParamsResource;
+	D3D11_MAPPED_SUBRESOURCE cbPerObjectDebugResource;
 
 	ConstBufferPerFrame* cbPerFrame;
 	ConstBufferPerObject* cbPerObject;
@@ -148,6 +151,7 @@ private:
 	ConstBufferPerObjectNormalDepth* cbPerObjectND;
 	ConstBufferPerFrameSSAO* cbPerFrameSSAO;
 	ConstBufferBlurParams* cbBlurParams;
+	ConstBufferPerObjectDebug* cbPerObjectDebug;
 
 	// Shaders
 	ID3D11VertexShader* mVertexShader;
@@ -164,6 +168,9 @@ private:
 
 	ID3D11VertexShader* mBlurVS;
 	ID3D11PixelShader* mBlurPS;
+
+	ID3D11VertexShader* mDebugTextureVS;
+	ID3D11PixelShader* mDebugTexturePS;
 
 	// Vertex Layout
 	ID3D11InputLayout* mVertexLayout;

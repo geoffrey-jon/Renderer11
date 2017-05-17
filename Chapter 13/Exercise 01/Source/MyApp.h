@@ -10,10 +10,6 @@
 #include "RenderStates.h"
 #include "GFirstPersonCamera.h"
 #include "GObject.h"
-#include "GCube.h"
-#include "GSphere.h"
-#include "GPlaneXZ.h"
-#include "GSky.h"
 	
 struct ConstBufferPerObject
 {

@@ -70,17 +70,11 @@ bool MyApp::Init()
 	SetupStaticLights();
 
 	// Create Objects
-	mSkullObject = new GObject("Models/skull.txt");
-	CreateGeometryBuffers(mSkullObject, false);
-
 	mFloorObject = new GPlaneXZ(20.0f, 30.0f, 60, 40);
 	CreateGeometryBuffers(mFloorObject, false);
 
 	mBoxObject = new GCube();
 	CreateGeometryBuffers(mBoxObject, false);
-
-	mSphereObject = new GSphere();
-	CreateGeometryBuffers(mSphereObject, false);
 
 	mSkyObject = new GSky(5000.0f);
 	CreateGeometryBuffers(mSkyObject, false);
@@ -95,8 +89,8 @@ bool MyApp::Init()
 	CreatePixelShader(&mPixelShader, L"Shaders/PixelShader.hlsl", "PS");
 	CreatePixelShader(&mPixelShaderCube, L"Shaders/PixelShaderCube.hlsl", "PS");
 
-//	CreateVertexShader(&mSkyVertexShader, L"Shaders/SkyVertexShader.hlsl", "VS");
-//	CreatePixelShader(&mSkyPixelShader, L"Shaders/SkyPixelShader.hlsl", "PS");
+	CreateVertexShader(&mSkyVertexShader, L"Shaders/SkyVertexShader.hlsl", "VS");
+	CreatePixelShader(&mSkyPixelShader, L"Shaders/SkyPixelShader.hlsl", "PS");
 
 	// Create Constant Buffers
 	CreateConstantBuffer(&mConstBufferPerFrame, sizeof(ConstBufferPerFrame));
@@ -196,13 +190,6 @@ void MyApp::PositionObjects()
 	mFloorObject->SetSpecular(DirectX::XMFLOAT4(0.8f, 0.8f, 0.8f, 16.0f));
 	mFloorObject->SetReflect(DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
 
-	mSphereObject->Translate(5.0, 2.0, 2.0);
-
-	mSphereObject->SetAmbient(DirectX::XMFLOAT4(0.2f, 0.3f, 0.4f, 1.0f));
-	mSphereObject->SetDiffuse(DirectX::XMFLOAT4(0.2f, 0.3f, 0.4f, 1.0f));
-	mSphereObject->SetSpecular(DirectX::XMFLOAT4(0.9f, 0.9f, 0.9f, 16.0f));
-	mSphereObject->SetReflect(DirectX::XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f));
-
 	mBoxObject->SetTextureScaling(2.0f, 1.0f);
 
 	mBoxObject->Translate(0.0f, 0.5f, 0.0f);
@@ -212,14 +199,6 @@ void MyApp::PositionObjects()
 	mBoxObject->SetDiffuse(DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
 	mBoxObject->SetSpecular(DirectX::XMFLOAT4(0.8f, 0.8f, 0.8f, 16.0f));
 	mBoxObject->SetReflect(DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
-
-	mSkullObject->Translate(0.0f, 1.0f, 0.0f);
-	mSkullObject->Scale(0.5f, 0.5f, 0.5f);
-
-	mSkullObject->SetAmbient(DirectX::XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f));
-	mSkullObject->SetDiffuse(DirectX::XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f));
-	mSkullObject->SetSpecular(DirectX::XMFLOAT4(0.8f, 0.8f, 0.8f, 16.0f));
-	mSkullObject->SetReflect(DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f));
 
 	LoadTextureToSRV(mFloorObject->GetDiffuseMapSRV(), L"Textures/floor.dds");
 	LoadTextureToSRV(mBoxObject->GetDiffuseMapSRV(), L"Textures/grasscube1024.dds");
@@ -568,15 +547,21 @@ void MyApp::DrawScene()
 
 	DrawObject(mSphereObject);
 */
+
+	mImmediateContext->HSSetShader(0, NULL, 0);
+	mImmediateContext->DSSetShader(0, NULL, 0);
+
 	// Draw Sky
-//	mImmediateContext->VSSetShader(mSkyVertexShader, NULL, 0);
-//	mImmediateContext->PSSetShader(mSkyPixelShader, NULL, 0);
+	mImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-//	mImmediateContext->RSSetState(RenderStates::NoCullRS);
-//	mImmediateContext->OMSetDepthStencilState(RenderStates::LessEqualDSS, 0);
+	mImmediateContext->VSSetShader(mSkyVertexShader, NULL, 0);
+	mImmediateContext->PSSetShader(mSkyPixelShader, NULL, 0);
 
-//	mSkyObject->SetEyePos(mCamera.GetPosition().x, mCamera.GetPosition().y, mCamera.GetPosition().z);
-//	DrawObject(mSkyObject);
+	mImmediateContext->RSSetState(RenderStates::NoCullRS);
+	mImmediateContext->OMSetDepthStencilState(RenderStates::LessEqualDSS, 0);
+
+	mSkyObject->SetEyePos(mCamera.GetPosition().x, mCamera.GetPosition().y, mCamera.GetPosition().z);
+	DrawObject(mSkyObject);
 
 	HR(mSwapChain->Present(0, 0));
 }

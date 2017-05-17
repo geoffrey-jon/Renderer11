@@ -32,7 +32,7 @@ float PS(VertexOut pin) : SV_Target
 {
     float2 texOffset = float2(gTexelWidth, gTexelHeight);
 
-    float4 color = gWeights[5] * gInputMap.SampleLevel(samLinearClamp, pin.Tex, 0.0f);
+    float color = gWeights[5] * gInputMap.SampleLevel(samLinearClamp, pin.Tex, 0.0f).x;
     float totalWeight = gWeights[5];
 
     float4 centerNormalDepth = gNormalDepthMap.SampleLevel(samLinearClamp, pin.Tex, 0.0f);
@@ -47,17 +47,12 @@ float PS(VertexOut pin) : SV_Target
         float2 tex = pin.Tex + i*texOffset;
         float4 neighborNormalDepth = gNormalDepthMap.SampleLevel(samLinearClamp, tex, 0.0f);
 
-        if (dot(neighborNormalDepth.xyz, centerNormalDepth.xyz) >= 0.8f)
-        {
-            if (abs(neighborNormalDepth.a - centerNormalDepth.a) <= 0.2f)
+        if ( (dot(neighborNormalDepth.xyz, centerNormalDepth.xyz) >= 0.8f) &&
+             (abs(neighborNormalDepth.a - centerNormalDepth.a) <= 0.2f) )
             {
                 float weight = gWeights[i + gBlurRadius];
-
-                color += weight * gInputMap.SampleLevel(samLinearClamp, tex, 0.0f);
-
+                color += weight * gInputMap.SampleLevel(samLinearClamp, tex, 0.0f).x;
                 totalWeight += weight;
-
-            }
         }
     }
 

@@ -39,16 +39,16 @@ VertexOut VS(VertexIn vin)
 	VertexOut vout;
 
 	vout.PosW = mul(float4(vin.PosL, 1.0f), gWorld).xyz;
-//	vout.NormalW = mul(vin.NormalL, (float3x3)gWorldInvTranspose);
-//	vout.TangentW = mul(vin.TangentL, (float3x3)gWorld);
+	vout.NormalW = mul(vin.NormalL, (float3x3)gWorldInvTranspose);
+	vout.TangentW = mul(vin.TangentL, (float3x3)gWorld);
 
 	// Transform to homogeneous clip space.
 	vout.PosH = mul(float4(vin.PosL, 1.0f), gWorldViewProj);
 	
-//	vout.Tex = mul(float4(vin.Tex, 0.0f, 1.0f), gTexTransform).xy;
+	vout.Tex = mul(float4(vin.Tex, 0.0f, 1.0f), gTexTransform).xy;
 
 	// Generate projective tex-coords to project shadow map onto scene.
-//	vout.ShadowPosH = mul(float4(vin.PosL, 1.0f), gShadowTransform);
+	vout.ShadowPosH = mul(float4(vin.PosL, 1.0f), gShadowTransform);
 
     return vout;
 }

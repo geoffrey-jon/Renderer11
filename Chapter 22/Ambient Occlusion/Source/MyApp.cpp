@@ -67,8 +67,8 @@ MyApp::~MyApp()
 	delete mSkullObject;
 	delete mFloorObject;
 	delete mBoxObject;
-	delete [] mSphereObjects;
-	delete [] mColumnObjects;
+	delete [] &mSphereObjects;
+	delete [] &mColumnObjects;
 }
 
 bool MyApp::Init()
@@ -132,6 +132,9 @@ bool MyApp::Init()
 	CreateVertexShaderSSAO(&mBlurVS, L"Shaders/BlurVS.hlsl", "VS");
 	CreatePixelShader(&mBlurPS, L"Shaders/BlurPS.hlsl", "PS");
 
+	CreateVertexShaderSSAO(&mDebugTextureVS, L"Shaders/DebugTextureVS.hlsl", "VS");
+	CreatePixelShader(&mDebugTexturePS, L"Shaders/DebugTexturePS.hlsl", "PS");
+
 	// Create Constant Buffers
 	CreateConstantBuffer(&mConstBufferPerFrame, sizeof(ConstBufferPerFrame));
 	CreateConstantBuffer(&mConstBufferPerObject, sizeof(ConstBufferPerObject));
@@ -139,6 +142,7 @@ bool MyApp::Init()
 	CreateConstantBuffer(&mConstBufferPerObjectND, sizeof(ConstBufferPerObjectNormalDepth));
 	CreateConstantBuffer(&mConstBufferPerFrameSSAO, sizeof(ConstBufferPerFrameSSAO));
 	CreateConstantBuffer(&mConstBufferBlurParams, sizeof(ConstBufferBlurParams));
+	CreateConstantBuffer(&mConstBufferPerObjectDebug, sizeof(ConstBufferPerObjectDebug));
 
 	SetupNormalDepth();
 	SetupSSAO();
@@ -146,7 +150,7 @@ bool MyApp::Init()
 	BuildOffsetVectors();
 	BuildFullScreenQuad();
 	BuildRandomVectorTexture();
-	mAOSetting = false;
+	mAOSetting = true;
 
 	return true;
 }
@@ -1182,6 +1186,41 @@ void MyApp::RenderScene()
 	mImmediateContext->PSSetShaderResources(2, 1, nullSRVs);
 }
 
+void MyApp::DrawSSAOMap()
+{
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+
+	mImmediateContext->IASetInputLayout(mVertexLayout);
+	mImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	mImmediateContext->IASetVertexBuffers(0, 1, &mScreenQuadVB, &stride, &offset);
+	mImmediateContext->IASetIndexBuffer(mScreenQuadIB, DXGI_FORMAT_R16_UINT, 0);
+
+	// Scale and shift quad to lower-right corner.
+	DirectX::XMMATRIX world(
+		0.25f, 0.0f, 0.0f, 0.0f,
+		0.0f, 0.25f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.75f, -0.75f, 0.0f, 1.0f);
+
+	mImmediateContext->Map(mConstBufferPerObjectDebug, 0, D3D11_MAP_WRITE_DISCARD, 0, &cbPerObjectDebugResource);
+	cbPerObjectDebug = (ConstBufferPerObjectDebug*)cbPerObjectDebugResource.pData;
+	cbPerObjectDebug->world = DirectX::XMMatrixTranspose(world);
+	mImmediateContext->Unmap(mConstBufferPerObjectDebug, 0);
+
+	mImmediateContext->VSSetShader(mDebugTextureVS, NULL, 0);
+	mImmediateContext->PSSetShader(mDebugTexturePS, NULL, 0);
+
+	mImmediateContext->VSSetConstantBuffers(0, 1, &mConstBufferPerObjectDebug);
+
+	mImmediateContext->PSSetShaderResources(0, 1, &mSsaoSRV1);
+	mImmediateContext->PSSetSamplers(0, 1, &RenderStates::DefaultSS);
+
+	mImmediateContext->OMSetDepthStencilState(RenderStates::DefaultDSS, 0);
+
+	mImmediateContext->DrawIndexed(6, 0, 0);
+}
+
 void MyApp::DrawScene()
 {
 	// Render Scene Normals and Depth
@@ -1195,6 +1234,9 @@ void MyApp::DrawScene()
 
 	// Normal Lighting Pass - Render scene to the back buffer
 	RenderScene();	
+
+	// Draw SSAO Map in Bottom Corner
+	DrawSSAOMap();
 
 	HR(mSwapChain->Present(0, 0));
 }

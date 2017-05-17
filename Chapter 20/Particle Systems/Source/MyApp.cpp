@@ -21,7 +21,7 @@ MyApp::MyApp(HINSTANCE Instance) :
 	mFloorObject(0),
 	mBoxObject(0)
 {
-	mWindowTitle = L"Ambient Occlusion Demo";
+	mWindowTitle = L"Particle Systems Demo";
 }
 
 MyApp::~MyApp()
@@ -44,8 +44,8 @@ MyApp::~MyApp()
 	delete mSkullObject;
 	delete mFloorObject;
 	delete mBoxObject;
-	delete [] mSphereObjects;
-	delete [] mColumnObjects;
+	delete [] &mSphereObjects;
+	delete [] &mColumnObjects;
 }
 
 bool MyApp::Init()
@@ -67,9 +67,6 @@ bool MyApp::Init()
 	SetupStaticLights();
 
 	// Create Objects
-	mSkullObject = new GObject("Models/skull.txt");
-	CreateGeometryBuffers(mSkullObject, false);
-
 	mFloorObject = new GPlaneXZ(20.0f, 30.0f, 60, 40);
 	CreateGeometryBuffers(mFloorObject, false);
 
@@ -218,11 +215,11 @@ void MyApp::PositionObjects()
 
 	for (int i = 0; i < 5; ++i)
 	{
-		mColumnObjects[i * 2 + 0]->Translate(-5.0f, 1.5f, -10.0f + i*5.0f);
-		mColumnObjects[i * 2 + 1]->Translate(+5.0f, 1.5f, -10.0f + i*5.0f);
+		mColumnObjects[i * 2 + 0]->Translate(-8.0f, 1.5f, -12.0f + i*6.0f);
+		mColumnObjects[i * 2 + 1]->Translate(+8.0f, 1.5f, -12.0f + i*6.0f);
 
-		mSphereObjects[i * 2 + 0]->Translate(-5.0f, 3.5f, -10.0f + i*5.0f);
-		mSphereObjects[i * 2 + 1]->Translate(+5.0f, 3.5f, -10.0f + i*5.0f);
+		mSphereObjects[i * 2 + 0]->Translate(-8.0f, 3.5f, -12.0f + i*6.0f);
+		mSphereObjects[i * 2 + 1]->Translate(+8.0f, 3.5f, -12.0f + i*6.0f);
 	}
 
 	for (int i = 0; i < 10; ++i)
@@ -245,14 +242,6 @@ void MyApp::PositionObjects()
 	mBoxObject->SetDiffuse(DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f));
 	mBoxObject->SetSpecular(DirectX::XMFLOAT4(0.8f, 0.8f, 0.8f, 16.0f));
 	mBoxObject->SetReflect(DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
-
-	mSkullObject->Translate(0.0f, 1.0f, 0.0f);
-	mSkullObject->Scale(0.5f, 0.5f, 0.5f);
-
-	mSkullObject->SetAmbient(DirectX::XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f));
-	mSkullObject->SetDiffuse(DirectX::XMFLOAT4(0.4f, 0.6f, 0.4f, 1.0f));
-	mSkullObject->SetSpecular(DirectX::XMFLOAT4(0.8f, 0.8f, 0.8f, 16.0f));
-	mSkullObject->SetReflect(DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f));
 
 	LoadTextureToSRV(mFloorObject->GetDiffuseMapSRV(), L"Textures/floor.dds");
 	LoadTextureToSRV(mFloorObject->GetNormalMapSRV(), L"Textures/floor_nmap.dds");
@@ -661,6 +650,38 @@ void MyApp::RenderScene()
 
 	DrawObject(mFloorObject);
 	DrawObject(mBoxObject);
+
+	// Set PS Parameters
+	mImmediateContext->Map(mConstBufferPSParams, 0, D3D11_MAP_WRITE_DISCARD, 0, &cbPSParamsResource);
+	cbPSParams = (ConstBufferPSParams*)cbPSParamsResource.pData;
+	cbPSParams->bUseTexure = true;
+	cbPSParams->bAlphaClip = false;
+	cbPSParams->bFogEnabled = false;
+	cbPSParams->bReflection = false;
+	cbPSParams->bUseNormal = false;
+	mImmediateContext->Unmap(mConstBufferPSParams, 0);
+
+	for (int i = 0; i < 10; ++i)
+	{
+		DrawObject(mColumnObjects[i]);
+	}
+
+	// Set PS Parameters
+	mImmediateContext->Map(mConstBufferPSParams, 0, D3D11_MAP_WRITE_DISCARD, 0, &cbPSParamsResource);
+	cbPSParams = (ConstBufferPSParams*)cbPSParamsResource.pData;
+	cbPSParams->bUseTexure = true;
+	cbPSParams->bAlphaClip = false;
+	cbPSParams->bFogEnabled = false;
+	cbPSParams->bReflection = true;
+	cbPSParams->bUseNormal = false;
+	mImmediateContext->Unmap(mConstBufferPSParams, 0);
+
+	mImmediateContext->PSSetShaderResources(3, 1, mSkyObject->GetDiffuseMapSRV());
+
+	for (int i = 0; i < 10; ++i)
+	{
+		DrawObject(mSphereObjects[i]);
+	}
 
 	// Draw Sky
 	mImmediateContext->VSSetShader(mSkyVertexShader, NULL, 0);

@@ -46,8 +46,8 @@ bool MyApp::Init()
 
 	// Initialize Camera
 	mCamera.SetPosition(30.0f, 50.0f, -100.0f);
-	mCamera.RotateY(-MathHelper::Pi / 8.0);
-	mCamera.Pitch(MathHelper::Pi / 8.0);
+	mCamera.RotateY(-MathHelper::Pi / 8.0f);
+	mCamera.Pitch(MathHelper::Pi / 8.0f);
 
 	// Initialize User Input
 	InitUserInput();

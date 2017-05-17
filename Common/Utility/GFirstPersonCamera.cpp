@@ -90,7 +90,7 @@ float GFirstPersonCamera::GetFovY()const
 float GFirstPersonCamera::GetFovX()const
 {
 	float halfWidth = 0.5f*GetNearWindowWidth();
-	return 2.0f*atan(halfWidth / mNearZ);
+	return 2.0f*atanf(halfWidth / mNearZ);
 }
 
 float GFirstPersonCamera::GetNearWindowWidth()const

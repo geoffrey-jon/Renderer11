@@ -24,7 +24,7 @@ MyApp::MyApp(HINSTANCE Instance) :
 	mDynamicCubeMapDSV(0), 
 	mDynamicCubeMapSRV(0)
 {
-	mWindowTitle = L"sdfgsdfg Cube Map Demo";
+	mWindowTitle = L"Dynamic Cube Map Demo";
 }
 
 MyApp::~MyApp()

@@ -47,8 +47,8 @@ MyApp::~MyApp()
 	delete mSkullObject;
 	delete mFloorObject;
 	delete mBoxObject;
-	delete [] mSphereObjects;
-	delete [] mColumnObjects;
+	delete [] &mSphereObjects;
+	delete [] &mColumnObjects;
 }
 
 bool MyApp::Init()
@@ -508,7 +508,7 @@ void MyApp::UpdateScene(float dt)
 	}
 
 	// Animate the lights
-//	mLightRotationAngle += 0.25f*dt;
+	mLightRotationAngle += 0.25f*dt;
 
 	DirectX::XMMATRIX R = DirectX::XMMatrixRotationY(mLightRotationAngle);
 	

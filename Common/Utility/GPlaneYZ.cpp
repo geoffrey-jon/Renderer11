@@ -35,6 +35,7 @@ GPlaneYZ::GPlaneYZ(float height, float depth, UINT m, UINT n) : GObject()
 
 			mVertices[(i * n) + j].Pos = DirectX::XMFLOAT3(0.0f, y, z);
 			mVertices[(i * n) + j].Normal = DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f);
+			//			mVertices[(i * n) + j].TangentU = DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f);
 
 			// Stretch texture over grid.
 			mVertices[(i * n) + j].Tex.x = j * du;
