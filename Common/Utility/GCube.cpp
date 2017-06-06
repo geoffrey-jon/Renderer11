@@ -19,7 +19,7 @@ GCube::GCube() : GObject()
 		mVertices[i].Pos = cube.Vertices[i].Position;
 		mVertices[i].Normal = cube.Vertices[i].Normal;
 		mVertices[i].Tex = cube.Vertices[i].TexC;
-		mVertices[i].TangentU = cube.Vertices[i].TangentU;
+//		mVertices[i].TangentU = cube.Vertices[i].TangentU;
 	}
 
 	mIndices.resize(mIndexCount);

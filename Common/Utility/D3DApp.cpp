@@ -625,8 +625,8 @@ void D3DApp::OnResize()
 
 	D3D11_TEXTURE2D_DESC DepthStencilDesc;
 
-	DepthStencilDesc.Width = 800;
-	DepthStencilDesc.Height = 600;
+	DepthStencilDesc.Width = mClientWidth;
+	DepthStencilDesc.Height = mClientHeight;
 	DepthStencilDesc.MipLevels = 1;
 	DepthStencilDesc.ArraySize = 1;
 	DepthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
@@ -660,8 +660,8 @@ void D3DApp::OnResize()
 
 	mViewport.TopLeftX = 0.0f;
 	mViewport.TopLeftY = 0.0f;
-	mViewport.Width = 800.0f;
-	mViewport.Height = 600.0f;
+	mViewport.Width = mClientWidth;
+	mViewport.Height = mClientHeight;
 	mViewport.MinDepth = 0.0f;
 	mViewport.MaxDepth = 1.0f;
 
