@@ -70,6 +70,8 @@ public:
 	inline bool IsIndexed() { return isIndexed; }
 	inline void SetIndexed(bool bIndexed) { isIndexed = bIndexed; }
 
+	inline DirectX::BoundingBox GetBoundingBox() { return mAABB; }
+
 private:
 	bool ReadObjFile();
 	void UpdateWorldTransform();

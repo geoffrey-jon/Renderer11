@@ -17,7 +17,9 @@ MyApp::MyApp(HINSTANCE Instance) :
 	mSkyVertexShader(0),
 	mSkyPixelShader(0),
 	mVertexLayout(0),
-	mSkullObject(0)
+	mSkyVertexLayout(0),
+	mSkullObject(0),
+	mInstancedBuffer(0)
 {
 	mWindowTitle = L"Instancing and Frustum Culling Demo";
 }
@@ -73,13 +75,18 @@ bool MyApp::Init()
 	CreateVertexShader(&mVertexShader, L"Shaders/VertexShader.hlsl", "VS");
 	CreatePixelShader(&mPixelShader, L"Shaders/PixelShader.hlsl", "PS");
 
-	CreateVertexShader(&mSkyVertexShader, L"Shaders/SkyVertexShader.hlsl", "VS");
+	CreateSkyVertexShader(&mSkyVertexShader, L"Shaders/SkyVertexShader.hlsl", "VS");
 	CreatePixelShader(&mSkyPixelShader, L"Shaders/SkyPixelShader.hlsl", "PS");
 
 	// Create Constant Buffers
 	CreateConstantBuffer(&mConstBufferPerFrame, sizeof(ConstBufferPerFrame));
 	CreateConstantBuffer(&mConstBufferPerObject, sizeof(ConstBufferPerObject));
 	CreateConstantBuffer(&mConstBufferPSParams, sizeof(ConstBufferPSParams));
+	CreateConstantBuffer(&mConstBufferWVP, sizeof(ConstBufferWVP));
+
+	BuildInstancedBuffer();
+	mVisibleObjectCount = 125;
+	bFrustumCulling = false;
 
 	return true;
 }
@@ -186,7 +193,7 @@ void MyApp::CreateVertexShader(ID3D11VertexShader** shader, LPCWSTR filename, LP
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "WORLD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
 		{ "WORLD", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 16, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
 		{ "WORLD", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 32, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
@@ -198,6 +205,29 @@ void MyApp::CreateVertexShader(ID3D11VertexShader** shader, LPCWSTR filename, LP
 
 	// Create the input layout
 	HR(mDevice->CreateInputLayout(vertexDesc, numElements, VSByteCode->GetBufferPointer(), VSByteCode->GetBufferSize(), &mVertexLayout));
+
+	VSByteCode->Release();
+}
+
+void MyApp::CreateSkyVertexShader(ID3D11VertexShader** shader, LPCWSTR filename, LPCSTR entryPoint)
+{
+	ID3DBlob* VSByteCode = 0;
+	HR(D3DCompileFromFile(filename, 0, D3D_COMPILE_STANDARD_FILE_INCLUDE, entryPoint, "vs_5_0", D3DCOMPILE_DEBUG, 0, &VSByteCode, 0));
+
+	HR(mDevice->CreateVertexShader(VSByteCode->GetBufferPointer(), VSByteCode->GetBufferSize(), NULL, shader));
+
+	// Create the vertex input layout.
+	D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	};
+
+	UINT numElements = sizeof(vertexDesc) / sizeof(D3D11_INPUT_ELEMENT_DESC);
+
+	// Create the input layout
+	HR(mDevice->CreateInputLayout(vertexDesc, numElements, VSByteCode->GetBufferPointer(), VSByteCode->GetBufferSize(), &mSkyVertexLayout));
 
 	VSByteCode->Release();
 }
@@ -283,25 +313,12 @@ void MyApp::Draw(GObject* object, DirectX::XMMATRIX& world, bool bShadow)
 		0.5f, 0.5f, 0.0f, 1.0f);
 	
 	// Set per object constants
-	mImmediateContext->Map(mConstBufferPerObject, 0, D3D11_MAP_WRITE_DISCARD, 0, &cbPerObjectResource);
-	cbPerObject = (ConstBufferPerObject*)cbPerObjectResource.pData;
-	cbPerObject->world = DirectX::XMMatrixTranspose(world);
-	cbPerObject->worldInvTranpose = DirectX::XMMatrixTranspose(worldInvTranspose);
-	cbPerObject->worldViewProj = DirectX::XMMatrixTranspose(worldViewProj);
-	cbPerObject->texTransform = DirectX::XMMatrixTranspose(texTransform);
-	cbPerObject->worldViewProjTex = DirectX::XMMatrixTranspose(worldViewProj * T);
+	mImmediateContext->Map(mConstBufferWVP, 0, D3D11_MAP_WRITE_DISCARD, 0, &cbWVPResource);
+	cbWVP = (ConstBufferWVP*)cbWVPResource.pData;
+	cbWVP->worldViewProj = DirectX::XMMatrixTranspose(worldViewProj);
+	mImmediateContext->Unmap(mConstBufferWVP, 0);
 
-	// If drawing a shadow, use the object's shadow material
-	if (bShadow == true) 
-	{
-		cbPerObject->material = object->GetShadowMaterial(); 
-	}
-	// Otherwise use the object's normal material
-	else { 
-		cbPerObject->material = object->GetMaterial(); 
-	}
-
-	mImmediateContext->Unmap(mConstBufferPerObject, 0);
+	mImmediateContext->VSSetConstantBuffers(0, 1, &mConstBufferWVP);
 
 	// Set Vertex Buffer to Input Assembler Stage
 	UINT stride = sizeof(Vertex);
@@ -343,6 +360,7 @@ void MyApp::OnResize()
 	D3DApp::OnResize();
 
 	mCamera.SetLens(0.25f*MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
+	DirectX::BoundingFrustum::CreateFromMatrix(mCameraFrustum, mCamera.Proj());
 }
 
 void MyApp::UpdateScene(float dt)
@@ -367,15 +385,63 @@ void MyApp::UpdateScene(float dt)
 	{
 		mCamera.Strafe(10.0f*dt);
 	}
+
+	// Frustum Culling
+	if (bFrustumCulling)
+	{
+		mCamera.UpdateViewMatrix();
+		mVisibleObjectCount = 0;
+
+		DirectX::XMVECTOR detView = DirectX::XMMatrixDeterminant(mCamera.View());
+		DirectX::XMMATRIX invView = DirectX::XMMatrixInverse(&detView, mCamera.View());
+
+		D3D11_MAPPED_SUBRESOURCE mappedData;
+		mImmediateContext->Map(mInstancedBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedData);
+
+		InstancedData* dataView = reinterpret_cast<InstancedData*>(mappedData.pData);
+
+		for (UINT i = 0; i < mInstancedData.size(); ++i)
+		{
+			DirectX::XMMATRIX W = mInstancedData[i].World;
+			DirectX::XMMATRIX invWorld = DirectX::XMMatrixInverse(&XMMatrixDeterminant(W), W);
+
+			// View space to the object's local space.
+			DirectX::XMMATRIX toLocal = XMMatrixMultiply(invView, invWorld);
+
+			// Decompose the matrix into its individual parts.
+			DirectX::XMVECTOR scale;
+			DirectX::XMVECTOR rotQuat;
+			DirectX::XMVECTOR translation;
+			DirectX::XMMatrixDecompose(&scale, &rotQuat, &translation, toLocal);
+
+			// Transform the camera frustum from view space to the object's local space.
+			DirectX::BoundingFrustum localspaceFrustum;
+			mCameraFrustum.Transform(localspaceFrustum, DirectX::XMVectorGetX(scale), rotQuat, translation);
+
+			DirectX::BoundingBox aabb = mSkullObject->GetBoundingBox();
+			// Perform the box/frustum intersection test in local space.
+			if (localspaceFrustum.Intersects(aabb))
+			{
+				// Write the instance data to dynamic VB of the visible objects.
+				dataView[mVisibleObjectCount++] = mInstancedData[i];
+			}
+		}
+
+		mImmediateContext->Unmap(mInstancedBuffer, 0);
+	}
 }
 
 void MyApp::OnKeyDown(WPARAM key, LPARAM info)
 {
 	if (key == 0x31)
 	{
+		bFrustumCulling = false;
+		mVisibleObjectCount = 125;
+		BuildInstancedBuffer();
 	}
 	else if (key == 0x32)
 	{
+		bFrustumCulling = true;
 	}
 }
 
@@ -424,9 +490,31 @@ void MyApp::DrawScene()
 	mImmediateContext->PSSetConstantBuffers(0, 1, &mConstBufferPerFrame);
 	mImmediateContext->PSSetConstantBuffers(1, 1, &mConstBufferPerObject);
 
-	DrawObject(mSkullObject);
+	// Store convenient matrices
+	DirectX::XMMATRIX texTransform = XMLoadFloat4x4(&mSkullObject->GetTexTransform());
+
+	// Set per object constants
+	mImmediateContext->Map(mConstBufferPerObject, 0, D3D11_MAP_WRITE_DISCARD, 0, &cbPerObjectResource);
+	cbPerObject = (ConstBufferPerObject*)cbPerObjectResource.pData;
+	cbPerObject->viewProj = DirectX::XMMatrixTranspose(mCamera.ViewProj());
+	cbPerObject->texTransform = DirectX::XMMatrixTranspose(texTransform);
+	cbPerObject->material = mSkullObject->GetMaterial();
+
+	mImmediateContext->Unmap(mConstBufferPerObject, 0);
+
+	// Set Vertex Buffer to Input Assembler Stage
+	UINT strides[2] = { sizeof(Vertex), sizeof(InstancedData) };
+	UINT offsets[2] = { 0, 0 };
+
+	ID3D11Buffer* vbs[2] = { *mSkullObject->GetVertexBuffer(), mInstancedBuffer };
+		
+	mImmediateContext->IASetVertexBuffers(0, 2, vbs, strides, offsets);
+	mImmediateContext->IASetIndexBuffer(*mSkullObject->GetIndexBuffer(), DXGI_FORMAT_R32_UINT, 0);
+
+	mImmediateContext->DrawIndexedInstanced(mSkullObject->GetIndexCount(), mVisibleObjectCount, 0, 0, 0);
 
 	// Draw Sky
+	mImmediateContext->IASetInputLayout(mSkyVertexLayout);
 	mImmediateContext->VSSetShader(mSkyVertexShader, NULL, 0);
 	mImmediateContext->PSSetShader(mSkyPixelShader, NULL, 0);
 
@@ -437,4 +525,58 @@ void MyApp::DrawScene()
 	DrawObject(mSkyObject);
 
 	HR(mSwapChain->Present(0, 0));
+}
+
+void MyApp::BuildInstancedBuffer()
+{
+	if (mInstancedBuffer)
+	{
+		ReleaseCOM(mInstancedBuffer);
+	}
+
+	const int n = 5;
+	mInstancedData.resize(n*n*n);
+
+	float width = 200.0f;
+	float height = 200.0f;
+	float depth = 200.0f;
+
+	float x = -0.5f*width;
+	float y = -0.5f*height;
+	float z = -0.5f*depth;
+	float dx = width / (n - 1);
+	float dy = height / (n - 1);
+	float dz = depth / (n - 1);
+	for (int k = 0; k < n; ++k)
+	{
+		for (int i = 0; i < n; ++i)
+		{
+			for (int j = 0; j < n; ++j)
+			{
+				// Position instanced along a 3D grid.
+				mInstancedData[k*n*n + i*n + j].World = DirectX::XMMATRIX(
+					1.0f, 0.0f, 0.0f, 0.0f, 
+					0.0f, 1.0f, 0.0f, 0.0f,
+					0.0f, 0.0f, 1.0f, 0.0f,
+					x + j*dx, y + i*dy, z + k*dz, 1.0f);
+				
+				// Random color.
+				mInstancedData[k*n*n + i*n + j].Color.x = MathHelper::RandF(0.0f, 1.0f);
+				mInstancedData[k*n*n + i*n + j].Color.y = MathHelper::RandF(0.0f, 1.0f);
+				mInstancedData[k*n*n + i*n + j].Color.z = MathHelper::RandF(0.0f, 1.0f);
+				mInstancedData[k*n*n + i*n + j].Color.w = 1.0f;
+			}
+		}
+	}
+
+	D3D11_BUFFER_DESC vbd;
+	vbd.Usage = D3D11_USAGE_DYNAMIC;
+	vbd.ByteWidth = sizeof(InstancedData) * mInstancedData.size();
+	vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	vbd.MiscFlags = 0;
+	vbd.StructureByteStride = 0;
+	D3D11_SUBRESOURCE_DATA ivinitData;
+	ivinitData.pSysMem = &mInstancedData[0];
+	HR(mDevice->CreateBuffer(&vbd, &ivinitData, &mInstancedBuffer));
 }

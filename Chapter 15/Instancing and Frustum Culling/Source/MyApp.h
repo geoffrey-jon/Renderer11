@@ -1,5 +1,4 @@
 /*  ======================
-	Summary: Cube Map Demo
 	======================  */
 
 #ifndef MYAPP_H
@@ -15,6 +14,7 @@
 #include "GCylinder.h"
 #include "GPlaneXZ.h"
 #include "GSky.h"
+#include "DirectXCollision.h"
 
 struct ConstBufferPerObject
 {
@@ -22,7 +22,12 @@ struct ConstBufferPerObject
 	DirectX::XMMATRIX texTransform;
 	Material material;
 };
-	
+
+struct ConstBufferWVP
+{
+	DirectX::XMMATRIX worldViewProj;
+};
+
 struct ConstBufferPerFrame
 {
 	DirectionalLight dirLight0;
@@ -39,7 +44,7 @@ struct ConstBufferPSParams
 	UINT bFogEnabled;
 	UINT bReflection;
 	UINT bUseNormal;
-	DirectX::XMINT2 pad;
+	DirectX::XMINT3 pad;
 };
 
 class MyApp : public D3DApp
@@ -64,6 +69,7 @@ private:
 	void CreateConstantBuffer(ID3D11Buffer** buffer, UINT size);
 
 	void CreateVertexShader(ID3D11VertexShader** shader, LPCWSTR filename, LPCSTR entryPoint);
+	void CreateSkyVertexShader(ID3D11VertexShader** shader, LPCWSTR filename, LPCSTR entryPoint);
 	void CreatePixelShader(ID3D11PixelShader** shader, LPCWSTR filename, LPCSTR entryPoint);
 
 	void LoadTextureToSRV(ID3D11ShaderResourceView** srv, LPCWSTR filename);
@@ -84,15 +90,18 @@ private:
 	ID3D11Buffer* mConstBufferPerFrame;
 	ID3D11Buffer* mConstBufferPerObject;
 	ID3D11Buffer* mConstBufferPSParams;
+	ID3D11Buffer* mConstBufferWVP;
 
 	D3D11_MAPPED_SUBRESOURCE cbPerFrameResource;
 	D3D11_MAPPED_SUBRESOURCE cbPerObjectResource;
 	D3D11_MAPPED_SUBRESOURCE cbPSParamsResource;
+	D3D11_MAPPED_SUBRESOURCE cbWVPResource;
 
 	ConstBufferPerFrame* cbPerFrame;
 	ConstBufferPerObject* cbPerObject;
 	ConstBufferPSParams* cbPSParams;
-	
+	ConstBufferWVP* cbWVP;
+
 	// Shaders
 	ID3D11VertexShader* mVertexShader;
 	ID3D11PixelShader* mPixelShader;
@@ -102,6 +111,7 @@ private:
 
 	// Vertex Layout
 	ID3D11InputLayout* mVertexLayout;
+	ID3D11InputLayout* mSkyVertexLayout;
 
 	// Objects
 	GObject* mSkullObject;
@@ -115,6 +125,15 @@ private:
 
 	// User Input
 	POINT mLastMousePos;
+
+	// Instancing
+	std::vector<InstancedData> mInstancedData;
+	ID3D11Buffer* mInstancedBuffer;
+	UINT mVisibleObjectCount;
+
+	// Frustum CUlling
+	DirectX::BoundingFrustum mCameraFrustum;
+	bool bFrustumCulling;
 };
 
 #endif // MYAPP_H
