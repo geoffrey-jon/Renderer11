@@ -11,6 +11,7 @@ ID3D11SamplerState* RenderStates::DefaultSS = 0;
 
 ID3D11RasterizerState* RenderStates::NoCullRS = 0;
 ID3D11DepthStencilState* RenderStates::LessEqualDSS = 0;
+ID3D11SamplerState* RenderStates::PointClampSS = 0;
 
 void RenderStates::InitAll(ID3D11Device* device)
 {
@@ -104,6 +105,24 @@ void RenderStates::InitAll(ID3D11Device* device)
 	lessEqualDesc.StencilEnable = false;
 
 	HR(device->CreateDepthStencilState(&lessEqualDesc, &LessEqualDSS));
+
+	// Point Clamp Sampler State
+	D3D11_SAMPLER_DESC PointClampSSDesc;
+	PointClampSSDesc.Filter = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+	PointClampSSDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	PointClampSSDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	PointClampSSDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	PointClampSSDesc.MipLODBias = 0.0f;
+	PointClampSSDesc.MaxAnisotropy = 1;
+	PointClampSSDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	PointClampSSDesc.BorderColor[0] = 1.0f;
+	PointClampSSDesc.BorderColor[1] = 1.0f;
+	PointClampSSDesc.BorderColor[2] = 1.0f;
+	PointClampSSDesc.BorderColor[3] = 1.0f;
+	PointClampSSDesc.MinLOD = -FLT_MAX;
+	PointClampSSDesc.MaxLOD = FLT_MAX;
+
+	HR(device->CreateSamplerState(&PointClampSSDesc, &PointClampSS));
 }
 
 void RenderStates::DestroyAll()

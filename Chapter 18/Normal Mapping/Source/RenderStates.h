@@ -20,6 +20,8 @@ public:
 
 	static ID3D11RasterizerState* NoCullRS;
 	static ID3D11DepthStencilState* LessEqualDSS;
+
+	static ID3D11SamplerState* PointClampSS;
 };
 
 #endif // RENDERSTATES_H
